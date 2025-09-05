@@ -20,7 +20,7 @@ type Order struct {
 	Table     string    `json:"table"`
 	Items     []string  `json:"items"`
 	Status    Status    `json:"status"`
-	WaiterID  string    `json:"waiterId"`
+	WaiterID  int32     `json:"waiterId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -33,7 +33,7 @@ type Store struct {
 
 func NewStore() *Store { return &Store{orders: map[string]*Order{}} }
 
-func (s *Store) Create(table string, items []string, waiterID string) *Order {
+func (s *Store) Create(table string, items []string, waiterID int32) *Order {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.seq++
@@ -66,7 +66,7 @@ func (s *Store) ListAll() []*Order {
 	return res
 }
 
-func (s *Store) ListByWaiter(wid string) []*Order {
+func (s *Store) ListByWaiter(wid int32) []*Order {
 	all := s.ListAll()
 	out := make([]*Order, 0)
 	for _, o := range all {

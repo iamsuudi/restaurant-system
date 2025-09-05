@@ -1,9 +1,11 @@
 package auth
 
 import (
-	"net/http"
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/email"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type loginReq struct {
@@ -16,34 +18,15 @@ type loginRes struct {
 	Role string `json:"role"`
 }
 
-func RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/login", login)
-	rg.POST("/logout", logout)
-}
+func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries, e *email.Service) {
+	service := NewService(db, q)
+	handler := NewHandler(service, e)
 
-func login(c *gin.Context) {
-	var req loginReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	user, err := findByUsername(req.Username, req.Password)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
-		return
-	}
-	tok, err := signJWT(user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot sign token"})
-		return
-	}
-	// HttpOnly cookie
-	h := 24 * 3600
-	c.SetCookie(cookieName, tok, h, "/", "", true, true)
-	c.JSON(http.StatusOK, loginRes{ID: user.ID, Role: user.Role})
-}
-
-func logout(c *gin.Context) {
-	c.SetCookie(cookieName, "", -1, "/", "", true, true)
-	c.Status(http.StatusNoContent)
+	rg.POST("/login", handler.Login)
+	rg.POST("/logout", handler.Logout)
+	rg.POST("/register", handler.RegisterUser)
+	rg.POST("/refresh", handler.RefreshToken)
+	rg.GET("/me", Authenticate(), handler.Me)
+	rg.POST("/forget-password", handler.ForgetPassword)
+	rg.POST("/reset-password", handler.ResetPassword)
 }

@@ -1,10 +1,10 @@
 package orders
 
 import (
-	"restaurant-system/internal/auth"
-	"restaurant-system/internal/realtime"
-
 	"github.com/gin-gonic/gin"
+
+	"restaurant-server/internal/auth"
+	"restaurant-server/internal/realtime"
 )
 
 func RegisterRoutes(rg *gin.RouterGroup, hub *realtime.Hub) {
@@ -13,9 +13,9 @@ func RegisterRoutes(rg *gin.RouterGroup, hub *realtime.Hub) {
 
 	grp := rg.Group("/orders")
 	{
-		grp.Use(auth.JWTGuard())
-		grp.POST("", h.Create)           // waiter
-		grp.PATCH(":id", h.UpdateStatus) // kitchen
-		grp.GET("", h.List)              // waiter → own, kitchen → all
+		grp.Use(auth.Authenticate())
+		grp.POST("", auth.Authorize("waiter"), h.Create)            // waiter
+		grp.PATCH(":id", auth.Authorize("kitchen"), h.UpdateStatus) // kitchen
+		grp.GET("", h.List)                                         // waiter → own, kitchen → all
 	}
 }
