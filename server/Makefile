@@ -1,4 +1,4 @@
-include .env.mk
+include .env.dev.mk
 
 db_url=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 
