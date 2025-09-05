@@ -5,8 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"restaurant-system/internal/auth"
-	"restaurant-system/internal/realtime"
+	"restaurant-server/internal/realtime"
 )
 
 type Handlers struct {
@@ -22,9 +21,15 @@ type createReq struct {
 }
 
 func (h *Handlers) Create(c *gin.Context) {
-	user := auth.MustUser(c)
-	if user.Role != "waiter" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "waiters only"})
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userID, ok := userIDRaw.(int32)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
 		return
 	}
 	var req createReq
@@ -32,7 +37,7 @@ func (h *Handlers) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	o := h.store.Create(req.Table, req.Items, user.ID)
+	o := h.store.Create(req.Table, req.Items, userID)
 	// broadcast to kitchen + owning waiter
 	h.hub.Emit(realtime.Event{Type: realtime.EventOrderCreated, Channel: realtime.ChannelOrders, Payload: map[string]interface{}{
 		"id": o.ID, "table": o.Table, "items": o.Items, "status": o.Status, "waiterId": o.WaiterID,
@@ -45,9 +50,15 @@ type updReq struct {
 }
 
 func (h *Handlers) UpdateStatus(c *gin.Context) {
-	user := auth.MustUser(c)
-	if user.Role != "kitchen" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "kitchen only"})
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	_, ok := userIDRaw.(int32)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
 		return
 	}
 	id := c.Param("id")
@@ -68,10 +79,5 @@ func (h *Handlers) UpdateStatus(c *gin.Context) {
 }
 
 func (h *Handlers) List(c *gin.Context) {
-	user := auth.MustUser(c)
-	if user.Role == "kitchen" {
-		c.JSON(http.StatusOK, h.store.ListAll())
-		return
-	}
-	c.JSON(http.StatusOK, h.store.ListByWaiter(user.ID))
+	c.JSON(http.StatusOK, h.store.ListAll())
 }

@@ -2,11 +2,9 @@ package menu
 
 import (
 	"net/http"
+	"restaurant-server/internal/realtime"
 
 	"github.com/gin-gonic/gin"
-
-	"restaurant-system/internal/auth"
-	"restaurant-system/internal/realtime"
 )
 
 type Handlers struct {
@@ -25,11 +23,18 @@ type putReq struct {
 }
 
 func (h *Handlers) Put(c *gin.Context) {
-	user := auth.MustUser(c)
-	if user.Role != "kitchen" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "kitchen only"})
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+
+	_, ok := userIDRaw.(int32)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
+		return
+	}
+
 	var req putReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

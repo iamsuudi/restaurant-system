@@ -1,13 +1,15 @@
-import { Link } from '@tanstack/react-router'
-
 export default function Header() {
   return (
-    <header className="p-2 flex gap-2 bg-white text-black justify-between">
-      <nav className="flex flex-row">
-        <div className="px-2 font-bold">
-          <Link to="/">Home</Link>
-        </div>
-      </nav>
-    </header>
+    <div className="flex justify-between px-4 py-2 border-b border-b-accent bg-gray-200">
+      <p className="font-bold text-xl">Restaurant</p>
+      <div className="flex tems-center text-xs gap-2">
+        <a>Dashboard</a>
+        <a>Orders</a>
+        <a>Menus</a>
+      </div>
+      <div>
+        <img src="/profile.png" className="w-8 h-8 bg-gray-400 rounded-full" />
+      </div>
+    </div>
   )
 }

@@ -1,66 +1,233 @@
 package auth
 
 import (
+	"context"
 	"errors"
-	"os"
+	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/types"
 )
 
-type User struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"-"`
-	Role     string `json:"role"` // waiter | kitchen
+type Service struct {
+	db *pgxpool.Pool
+	q  *repository.Queries
 }
 
-// In-memory users (replace with DB)
-var users = map[string]User{
-	"w1": {ID: "w1", Username: "waiter", Password: "waiter", Role: "waiter"},
-	"k1": {ID: "k1", Username: "kitchen", Password: "kitchen", Role: "kitchen"},
+func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
+	return &Service{db: dbConn, q: dbQueries}
 }
 
-func findByUsername(u, p string) (User, error) {
-	for _, usr := range users {
-		if usr.Username == u && usr.Password == p {
-			return usr, nil
-		}
+// Authenticate verifies a user's email and password.
+func (s *Service) Authenticate(ctx context.Context, email, password string) (*repository.User, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, err
 	}
-	return User{}, errors.New("invalid credentials")
-}
+	defer tx.Rollback(ctx)
 
-type UserCtx struct {
-	ID   string
-	Role string
-}
+	qtx := s.q.WithTx(tx)
 
-type Claims struct {
-	UserCtx
-	jwt.RegisteredClaims
-}
-
-func signJWT(u User) (string, error) {
-	secret := []byte(os.Getenv("JWT_SECRET"))
-	claims := Claims{
-		UserCtx: UserCtx{ID: u.ID, Role: u.Role},
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+	user, err := qtx.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, errors.New("invalid email")
 	}
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return t.SignedString(secret)
+
+	account, err := qtx.GetAccount(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(password)); err != nil {
+		return nil, errors.New("invalid password")
+	}
+
+	return &user, tx.Commit(ctx)
 }
 
-func parseJWT(tokenStr string) (UserCtx, error) {
-	secret := []byte(os.Getenv("JWT_SECRET"))
-	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
+// RegisterUser creates a new user account with hashed password.
+func (s *Service) RegisterUser(ctx context.Context, input types.UserPayload) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	_, err = qtx.GetUserByEmail(ctx, input.Email)
+	if err == nil {
+		return errors.New("Email already exists!")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	user, err := qtx.CreateUser(ctx, repository.CreateUserParams{
+		Name:  input.Name,
+		Email: input.Email,
+		Phone: input.Phone,
+		Role:  input.Role,
 	})
-	if err != nil || !token.Valid {
-		return UserCtx{}, errors.New("invalid token")
+	if err != nil {
+		return err
 	}
-	claims := token.Claims.(*Claims)
-	return claims.UserCtx, nil
+
+	err = qtx.CreateAccount(ctx, repository.CreateAccountParams{
+		UserID:       user.ID,
+		PasswordHash: string(hashedPassword),
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// StoreRefreshToken saves a refresh token in the database.
+func (s *Service) StoreRefreshToken(ctx context.Context, userID int32, token string, expiresAt time.Time) error {
+	_, err := s.q.CreateRefreshToken(ctx, repository.CreateRefreshTokenParams{
+		UserID:    userID,
+		Token:     token,
+		ExpiresAt: expiresAt,
+	})
+	return err
+}
+
+// RefreshAccessToken validates a refresh token and returns a new JWT.
+func (s *Service) RefreshAccessToken(ctx context.Context, token string) (string, string, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	rt, err := qtx.GetRefreshToken(ctx, token)
+	if err != nil || time.Now().After(rt.ExpiresAt) {
+		return "", "", errors.New("invalid or expired refresh token")
+	}
+
+	user, err := qtx.GetUserByID(ctx, rt.UserID)
+	if err != nil {
+		return "", "", err
+	}
+
+	newJWT, err := GenerateJWT(user.ID, user.Role)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Rotate refresh token (optional, but more secure)
+	_ = qtx.DeleteRefreshToken(ctx, token)
+
+	newRefreshToken := GenerateRandomToken(64)
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+
+	_, err = qtx.CreateRefreshToken(ctx, repository.CreateRefreshTokenParams{
+		UserID:    user.ID,
+		Token:     newRefreshToken,
+		ExpiresAt: expiresAt,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return newJWT, newRefreshToken, tx.Commit(ctx)
+}
+
+// DeleteRefreshToken removes a refresh token from the database.
+func (s *Service) DeleteRefreshToken(ctx context.Context, token string) error {
+	return s.q.DeleteRefreshToken(ctx, token)
+}
+
+func (s *Service) GetUserByID(ctx context.Context, userID int32) (repository.User, error) {
+	user, err := s.q.GetUserByID(ctx, userID)
+	if err != nil {
+		return repository.User{}, err
+	}
+	return user, nil
+}
+
+func (s *Service) RequestPasswordReset(ctx context.Context, email string) (string, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// Get user by email
+	user, err := qtx.GetUserByEmail(ctx, email)
+	if err != nil {
+		return "", err
+	}
+
+	// Generate secure token
+	token := GenerateRandomToken(32)
+
+	// Set expiration time (1 hour from now)
+	expiresAt := time.Now().Add(30 * time.Minute)
+
+	// Create password reset token
+	_, err = qtx.CreatePasswordResetToken(ctx, repository.CreatePasswordResetTokenParams{
+		UserID:    user.ID,
+		Token:     token,
+		ExpiresAt: expiresAt,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return token, tx.Commit(ctx)
+}
+
+func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// Get valid token
+	resetToken, err := s.q.GetValidPasswordResetToken(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// Update user password
+	err = qtx.UpdateUserPassword(ctx, repository.UpdateUserPasswordParams{
+		PasswordHash: string(hashedPassword),
+		UserID:       resetToken.UserID,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Mark token as used
+	err = qtx.MarkTokenAsUsed(ctx, resetToken.ID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (s *Service) CleanupExpiredTokens(ctx context.Context) error {
+	return s.q.DeleteExpiredTokens(ctx)
 }

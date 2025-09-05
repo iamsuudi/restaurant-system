@@ -2,13 +2,9 @@ package realtime
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
 	"sync"
 
-	"github.com/gorilla/websocket"
-
-	"restaurant-system/internal/auth"
+	"restaurant-server/internal/auth"
 )
 
 type Hub struct {
@@ -17,118 +13,64 @@ type Hub struct {
 
 	// channel-specific broadcast queues
 	broadcast chan Event
-}
 
-type Client struct {
-	hub     *Hub
-	conn    *websocket.Conn
-	user    auth.UserCtx // ID, Role
-	channel Channel
-	send    chan []byte
+	register   chan *Client
+	unregister chan *Client
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:   make(map[*Client]struct{}),
-		broadcast: make(chan Event, 1024),
+		clients:    make(map[*Client]struct{}),
+		broadcast:  make(chan Event, 1024),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
 	}
 }
 
 func (h *Hub) Run() {
-	for evt := range h.broadcast {
-		payload, _ := json.Marshal(evt)
-		h.clientsMu.RLock()
-		for c := range h.clients {
-			if c.channel != evt.Channel {
-				continue
+	for {
+		select {
+		case client := <-h.register:
+			h.clientsMu.Lock()
+			h.clients[client] = struct{}{}
+			h.clientsMu.Unlock()
+		case client := <-h.unregister:
+			h.clientsMu.Lock()
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
 			}
-			// Orders: kitchen sees all; waiter only their own order events
-			if evt.Channel == ChannelOrders && evt.Type != EventMenuUpdated {
-				if ord, ok := evt.Payload.(map[string]interface{}); ok {
-					// expect payload to include waiterId
-					if c.user.Role == "kitchen" {
-						c.safeSend(payload)
-						continue
-					}
-					if c.user.Role == "waiter" {
-						if wid, _ := ord["waiterId"].(string); wid == c.user.ID {
-							c.safeSend(payload)
-						}
-					}
+			h.clientsMu.Unlock()
+		case evt := <-h.broadcast:
+			payload, _ := json.Marshal(evt)
+			h.clientsMu.RLock()
+			for c := range h.clients {
+				if _, ok := c.channels[evt.Channel]; !ok {
 					continue
 				}
-			}
-			// Menu: all waiters
-			if evt.Channel == ChannelMenu {
-				if c.user.Role == "waiter" {
-					c.safeSend(payload)
+
+				switch evt.Channel {
+				case ChannelOrders:
+					if auth.Can(c.user.Role, "orders:read") {
+						c.safeSend(payload)
+					}
+				case ChannelMenu:
+					if auth.Can(c.user.Role, "menu:read") {
+						c.safeSend(payload)
+					}
 				}
-				continue
 			}
-		}
-		h.clientsMu.RUnlock()
-	}
-}
-
-func (c *Client) safeSend(b []byte) {
-	select {
-	case c.send <- b:
-	default:
-		// client is slow; drop connection
-		c.conn.Close()
-		c.hub.unregister(c)
-	}
-}
-
-var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
-
-func ServeWS(h *Hub, w http.ResponseWriter, r *http.Request, ch Channel, user auth.UserCtx) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("ws upgrade:", err)
-		return
-	}
-	client := &Client{hub: h, conn: conn, user: user, channel: ch, send: make(chan []byte, 256)}
-	h.register(client)
-	go client.writePump()
-	go client.readPump()
-}
-
-func (h *Hub) register(c *Client) {
-	h.clientsMu.Lock()
-	h.clients[c] = struct{}{}
-	h.clientsMu.Unlock()
-}
-
-func (h *Hub) unregister(c *Client) {
-	h.clientsMu.Lock()
-	delete(h.clients, c)
-	h.clientsMu.Unlock()
-}
-
-func (c *Client) readPump() {
-	defer func() {
-		c.conn.Close()
-		c.hub.unregister(c)
-	}()
-	for {
-		if _, _, err := c.conn.ReadMessage(); err != nil {
-			return
-		}
-		// For this MVP: clients don't push via WS; use REST to mutate state.
-	}
-}
-
-func (c *Client) writePump() {
-	defer func() {
-		c.conn.Close()
-		c.hub.unregister(c)
-	}()
-	for msg := range c.send {
-		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			return
+			h.clientsMu.RUnlock()
 		}
 	}
+}
+
+func (h *Hub) Register(c *Client) {
+	h.register <- c
+}
+
+func (h *Hub) Unregister(c *Client) {
+	h.unregister <- c
 }
 
 func (h *Hub) Emit(evt Event) {

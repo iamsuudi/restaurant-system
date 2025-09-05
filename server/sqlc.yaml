@@ -1,0 +1,91 @@
+version: "2"
+sql:
+  - schema: "database/schemas"
+    queries:
+      - "database/queries"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "repository"
+        out: "internal/repository"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        emit_db_tags: true
+        emit_prepared_queries: true
+        emit_exact_table_names: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+            nullable: true
+          - db_type: "text"
+            go_type: "string"
+          - db_type: "text"
+            go_type:
+              type: "string"
+              pointer: true
+            nullable: true
+          - column: "audit_log.diff"
+            go_type:
+              # for import, package and type please refer the go code above
+              import: "digital-id-server/shared/types"
+              package: "types"
+              # put your type here,
+              # if you want struct instead, put the CustomParams
+              type: "JSONB"
+          - db_type: "pg_catalog.varchar"
+            go_type: "string"
+          - db_type: "pg_catalog.varchar"
+            go_type:
+              type: "string"
+              pointer: true
+            nullable: true
+          - db_type: "pg_catalog.numeric"
+            go_type: "float64"
+          - db_type: "pg_catalog.numeric"
+            go_type:
+              type: "float64"
+              pointer: true
+            nullable: true
+          - db_type: "pg_catalog.int4"
+            go_type: "int32"
+          - db_type: "pg_catalog.int4"
+            go_type:
+              type: "int32"
+              pointer: true
+            nullable: true
+          - db_type: "pg_catalog.int8"
+            go_type: "int64"
+          - db_type: "pg_catalog.int8"
+            go_type:
+              type: "int64"
+              pointer: true
+            nullable: true
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              import: "time"
+              type: "Time"
+          - db_type: "pg_catalog.timestamp"
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+            nullable: true
+          - db_type: "timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
+          - db_type: "timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+            nullable: true
