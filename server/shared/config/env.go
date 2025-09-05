@@ -11,17 +11,27 @@ import (
 )
 
 func Load() {
-	fmt.Println("🔧 Loading configuration...")
-	// Load .env.mk first (Makefile-style values)
-	if err := godotenv.Overload(".env.mk"); err != nil {
-		log.Println("⚠️ .env.mk not found or unreadable.")
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "dev"
 	}
 
-	// Load .env next — allows overrides and complex keys
-	if err := godotenv.Overload(".env"); err != nil {
-		log.Println("⚠️ .env not found or unreadable.")
+	// Files to load, in order
+	files := []string{
+		".env",
+		".env." + env,
+		".env." + env + ".mk",
 	}
-	fmt.Println("🔧 Environment variables loaded successfully")
+
+	for _, file := range files {
+		if err := godotenv.Overload(file); err != nil {
+			log.Printf("⚠️ %s not found or unreadable.\n", file)
+		} else {
+			fmt.Printf("✅ Loaded %s\n", file)
+		}
+	}
+
+	fmt.Printf("🔧 Environment variables loaded for %s\n", env)
 }
 
 func GetDatabaseConfig() types.DBConfig {

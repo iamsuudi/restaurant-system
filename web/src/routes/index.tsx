@@ -1,185 +1,186 @@
-import { createFileRoute } from '@tanstack/react-router'
-import Header from '@/components/Header'
+import * as React from 'react'
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useRouter,
+  useSearch,
+} from '@tanstack/react-router'
+import { BadgeAlert, ExternalLink, Eye, EyeOff, Utensils } from 'lucide-react'
+import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { currentUserQueryOptions, query } from '@/hooks/query'
+import { useAppForm } from '@/components/form/form-context'
 
-export const Route = createFileRoute('/')({
-  component: App,
+export const loginSchema = z.object({
+  email: z.string().email('Invalid e-mail address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
-type User = {
-  id: string
-  name: string
-  email: string
-  phone: string
-}
+export type LoginFormData = z.infer<typeof loginSchema>
+const loginSearchSchema = z.object({
+  redirect: z.string().optional().default('/dashboard'),
+})
 
-type Item = {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  notes?: string
-}
+export const Route = createFileRoute('/')({
+  validateSearch: loginSearchSchema,
+  beforeLoad: async ({ context }) => {
+    const { queryClient } = context
+    const data = await queryClient.fetchQuery(currentUserQueryOptions)
+    if (data) {
+      throw redirect({ to: '/dashboard' })
+    }
+  },
+  component: LoginComponent,
+})
 
-type Order = {
-  id: string
-  waiter: User
-  items: Array<Item>
-  status: string
-  ts: string
-}
+function LoginComponent() {
+  const search = useSearch({ from: '/' })
+  const router = useRouter()
 
-const orders: Array<Order> = [
-  {
-    id: '#12345',
-    waiter: {
-      id: 'waiter1',
-      name: 'Emily Carter',
-      email: 'emily@example.com',
-      phone: '123-1234-1234',
-    },
-    items: [
-      {
-        id: '#chicken_parmesan',
-        name: 'Chicken Parmesan',
-        price: 15.99,
-        quantity: 1,
-        notes: 'Extra cheese',
-      },
-      {
-        id: '#caesar_salad',
-        name: 'Caesar Salad',
-        price: 8.99,
-        quantity: 1,
-        notes: 'Extra dressing',
-      },
-    ],
-    status: 'pending',
-    ts: '10:45 AM',
-  },
-  {
-    id: '2',
-    waiter: {
-      id: 'waiter2',
-      name: 'John Doe',
-      email: 'john@example.com',
-      phone: '555-5555-5555',
-    },
-    items: [
-      {
-        id: '#pizza',
-        name: 'Pizza',
-        price: 12.99,
-        quantity: 2,
-        notes: 'Extra cheese',
-      },
-      {
-        id: '#salad',
-        name: 'Salad',
-        price: 7.99,
-        quantity: 1,
-        notes: 'Extra dressing',
-      },
-    ],
-    status: 'pending',
-    ts: '11:00 AM',
-  },
-  {
-    id: '3',
-    waiter: {
-      id: 'waiter3',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      phone: '987-6543-2109',
-    },
-    items: [
-      {
-        id: '#burger',
-        name: 'Burger',
-        price: 10.99,
-        quantity: 1,
-        notes: 'Extra pickles',
-      },
-      {
-        id: '#fries',
-        name: 'Fries',
-        price: 3.99,
-        quantity: 2,
-        notes: 'Extra ketchup',
-      },
-    ],
-    status: 'pending',
-    ts: '12:00 PM',
-  },
-  {
-    id: '4',
-    waiter: {
-      id: 'waiter4',
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
-      phone: '555-5555-5555',
-    },
-    items: [
-      {
-        id: '#pizza',
-        name: 'Pizza',
-        price: 12.99,
-        quantity: 2,
-        notes: 'Extra cheese',
-      },
-      {
-        id: '#salad',
-        name: 'Salad',
-        price: 7.99,
-        quantity: 1,
-        notes: 'Extra dressing',
-      },
-    ],
-    status: 'pending',
-    ts: '11:00 AM',
-  },
-]
+  const [showPassword, setShowPassword] = React.useState(false)
+  const { mutate, isError, error } = query.loginMutation(() =>
+    router.history.push(search.redirect),
+  )
 
-export default function App() {
+  const form = useAppForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    onSubmit: ({ value }) => {
+      mutate(value)
+    },
+    validators: {
+      onChange: loginSchema,
+    },
+  })
+
   return (
-    <div className="flex flex-col">
-      <Header />
-      <div className="p-5 space-y-10">
-        <div>
-          <p>Active Orders</p>
-          <p>Real-time order tracking for kitchen and service staff.</p>
-        </div>
-
-        <div className="flex flex-wrap gap-10">
-          <div className="bg-gray-100 p-5 shadow-lg space-y-5">
-            <div className="flex justify-between">
-              <p className="font-bold">New Orders</p>
-              <span className="bg-red-500 text-white p-1 rounded-full">3</span>
+    <>
+      <section className="flex min-h-screen px-4 py-16 md:py-32 dark:bg-transparent">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+          className="bg-card m-auto h-fit w-full max-w-sm rounded-[calc(var(--radius)+.125rem)] border p-0.5 shadow-md dark:[--color-muted:var(--color-zinc-900)]"
+        >
+          <div className="p-8 pb-6">
+            <div className=" flex items-center gap-4">
+              <Link to="/" aria-label="go home">
+                <Utensils className="size-10 text-primary" />
+              </Link>
+              <div>
+                <p className="text-lg font-bold">
+                  <span>Samrat Restaurant</span>
+                </p>
+                <p className="text-sm">Welcome back! Sign in to continue</p>
+              </div>
             </div>
 
-            {orders.map((order) => (
-              <div className="flex justify-between bg-white p-3 w-96">
-                <div className="flex flex-col">
-                  <span className="font-bold">{order.id}</span>
-                  <span className="text-stone-600">{order.waiter.name}</span>
-                  {order.items.map((item) => (
-                    <span className="text-stone-600">{item.name}</span>
-                  ))}
-                  <span className="text-stone-600 mt-5 text-sm">
-                    {order.ts}
-                  </span>
-                </div>
+            <Separator className="my-6" />
 
-                <div className="flex flex-col justify-between">
-                  <span className="bg-blue-200 text-blue-700 rounded-full text-center">
-                    New
-                  </span>
-                  <button className="text-red-500">Start Prep</button>
-                </div>
-              </div>
-            ))}
+            <div className="space-y-6">
+              <form.AppField
+                name="email"
+                children={(field) => (
+                  <field.TextField
+                    label={'Email'}
+                    placeholder="username@example.com"
+                  />
+                )}
+              />
+
+              <form.AppField
+                name="password"
+                children={(field) => (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor={field.name}
+                        className="text-sm text-title"
+                      >
+                        Password
+                      </Label>
+                      <Button asChild variant="link" size="sm">
+                        <Link
+                          to="/forget-password"
+                          className="text-xs link intent-info variant-ghost"
+                        >
+                          Forgot your Password ?
+                        </Link>
+                      </Button>
+                    </div>
+
+                    <div className="relative flex">
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="**********"
+                        className="input sz-md variant-mixed"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-2 hover:cursor-pointer"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="size-5" />
+                        ) : (
+                          <Eye className="size-5" />
+                        )}
+                      </button>
+                    </div>
+
+                    {field.getMeta().isBlurred && (
+                      <div className="text-xs text-destructive">
+                        {field.state.meta.errors.map((err, i) => (
+                          <div key={i} className="error">
+                            {err?.message}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              />
+
+              <form.AppForm>
+                <form.SubscribeButton label="Sign in" />
+              </form.AppForm>
+
+              {isError && (
+                <Alert variant={'destructive'}>
+                  <BadgeAlert className="w-4 h-4 " />
+                  <AlertDescription>{error.message}</AlertDescription>
+                </Alert>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <div className="bg-muted rounded-(--radius) border p-3">
+            <p className="text-sm text-center text-accent-foreground">
+              Don't have an account ?
+              <Button asChild variant="link" className="px-1 underline">
+                <a href={`mailto:suudiabdulfetah@gmail.com`}>
+                  Contact Admin
+                  <ExternalLink className="size-4 inline" />
+                </a>
+              </Button>
+            </p>
+          </div>
+        </form>
+      </section>
+    </>
   )
 }

@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	"restaurant-server/database"
 	"restaurant-server/internal/auth"
@@ -14,19 +12,20 @@ import (
 	"restaurant-server/internal/realtime"
 	"restaurant-server/internal/repository"
 	"restaurant-server/internal/ws"
+	"restaurant-server/shared/config"
 	"restaurant-server/shared/email"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	_ = os.Setenv("JWT_SECRET", "devsecret-change-me")
+	config.Load()
 
 	db := database.Connect()
+	defer db.Close()
+
+	gin.DisableConsoleColor()
+
 	q := repository.New(db)
+
 	emailService, err := email.DefaultService()
 	if err != nil {
 		log.Fatal(err)
@@ -38,12 +37,9 @@ func main() {
 
 	r := gin.Default()
 
-	api := r.Group("/api")
-	{
-		auth.RegisterRoutes(api, db, q, emailService)
-		orders.RegisterRoutes(api, hub)
-		menu.RegisterRoutes(api, hub)
-	}
+	auth.RegisterRoutes(r.Group("/api/auth"), db, q, emailService)
+	orders.RegisterRoutes(r.Group("/api/orders"), hub)
+	menu.RegisterRoutes(r.Group("/api/menus"), hub)
 
 	// WebSocket endpoints
 	wsGroup := r.Group("/ws")

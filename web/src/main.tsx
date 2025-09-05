@@ -1,5 +1,5 @@
-import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 
 // Import the generated route tree
@@ -8,10 +8,21 @@ import { routeTree } from './routeTree.gen'
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchInterval: 60 * 60 * 1000,
+    },
+  },
+})
+
 // Create a new router instance
 const router = createRouter({
   routeTree,
-  context: {},
+  context: {
+    queryClient,
+  },
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
@@ -30,9 +41,9 @@ const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
-    <StrictMode>
+    <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-    </StrictMode>,
+    </QueryClientProvider>,
   )
 }
 
