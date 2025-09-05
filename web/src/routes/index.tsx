@@ -170,11 +170,11 @@ function LoginComponent() {
 
           <div className="bg-muted rounded-(--radius) border p-3">
             <p className="text-sm text-center text-accent-foreground">
-              Don't have an account ?
+              <span className="pt-2">Don't have an account ?</span>
               <Button asChild variant="link" className="px-1 underline">
                 <a href={`mailto:suudiabdulfetah@gmail.com`}>
                   Contact Admin
-                  <ExternalLink className="size-4 inline" />
+                  <ExternalLink className="size-4 inline mb-1" />
                 </a>
               </Button>
             </p>
