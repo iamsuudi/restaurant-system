@@ -2,29 +2,29 @@ import * as React from 'react'
 import {
   BookOpen,
   Bot,
-  Command,
-  Frame,
+  ChefHat,
+  Home,
   LifeBuoy,
-  Map,
-  PieChart,
   Send,
   Settings2,
   SquareTerminal,
+  TrendingUp,
+  Utensils,
+  UtensilsCrossed,
 } from 'lucide-react'
 
-import { NavMain } from '@/components/nav-main'
-import { NavProjects } from '@/components/nav-projects'
+import _ from 'lodash'
+import { Link, useLocation } from '@tanstack/react-router'
 import { NavSecondary } from '@/components/nav-secondary'
-import { NavUser } from '@/components/nav-user'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { query } from '@/hooks/query'
 
 const data = {
   user: {
@@ -133,51 +133,76 @@ const data = {
   ],
   projects: [
     {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Frame,
+      name: 'Dashboard',
+      url: '/dashboard',
+      icon: Home,
     },
     {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChart,
+      name: 'Menu',
+      url: '/dashboard/menu',
+      icon: UtensilsCrossed,
     },
     {
-      name: 'Travel',
-      url: '#',
-      icon: Map,
+      name: 'Orders',
+      url: '/dashboard/orders',
+      icon: ChefHat,
+    },
+    {
+      name: 'Analytics',
+      url: '/dashboard/analytics',
+      icon: TrendingUp,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: user } = query.currentUserQuery()
+  const location = useLocation()
+
   return (
     <Sidebar variant="inset" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+      <SidebarHeader className="px-0">
+        <SidebarMenu className="">
+          <SidebarMenuItem className="">
+            <SidebarMenuButton size="lg" asChild className="">
+              <a href="">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                  <Utensils className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-medium">Restaurant</span>
+                  <span className="truncate text-xs">
+                    {_.capitalize(user?.role)}
+                  </span>
                 </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+      <SidebarContent className="pt-5 px-2">
+        <SidebarMenu className="space-y-1">
+          {data.projects.map((item) => {
+            const isActive = item.url === location.pathname
+
+            return (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  asChild
+                  className="group"
+                >
+                  <Link to={item.url}>
+                    <item.icon className="text-primary group-data-[active=true]:text-background" />
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
     </Sidebar>
   )
 }

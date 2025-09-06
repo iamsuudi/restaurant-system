@@ -13,6 +13,11 @@ import { Route as ForgetPasswordRouteImport } from './routes/forget-password'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthDashboardRouteRouteImport } from './routes/_auth/dashboard.route'
+import { Route as AuthDashboardIndexRouteImport } from './routes/_auth/dashboard.index'
+import { Route as AuthDashboardSettingsRouteImport } from './routes/_auth/dashboard/settings'
+import { Route as AuthDashboardProfileRouteImport } from './routes/_auth/dashboard/profile'
+import { Route as AuthDashboardNotificationRouteImport } from './routes/_auth/dashboard/notification'
+import { Route as AuthDashboardActivityRouteImport } from './routes/_auth/dashboard/activity'
 
 const ForgetPasswordRoute = ForgetPasswordRouteImport.update({
   id: '/forget-password',
@@ -33,30 +38,95 @@ const AuthDashboardRouteRoute = AuthDashboardRouteRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthDashboardIndexRoute = AuthDashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
+const AuthDashboardSettingsRoute = AuthDashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
+const AuthDashboardProfileRoute = AuthDashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
+const AuthDashboardNotificationRoute =
+  AuthDashboardNotificationRouteImport.update({
+    id: '/notification',
+    path: '/notification',
+    getParentRoute: () => AuthDashboardRouteRoute,
+  } as any)
+const AuthDashboardActivityRoute = AuthDashboardActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forget-password': typeof ForgetPasswordRoute
-  '/dashboard': typeof AuthDashboardRouteRoute
+  '/dashboard': typeof AuthDashboardRouteRouteWithChildren
+  '/dashboard/activity': typeof AuthDashboardActivityRoute
+  '/dashboard/notification': typeof AuthDashboardNotificationRoute
+  '/dashboard/profile': typeof AuthDashboardProfileRoute
+  '/dashboard/settings': typeof AuthDashboardSettingsRoute
+  '/dashboard/': typeof AuthDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forget-password': typeof ForgetPasswordRoute
-  '/dashboard': typeof AuthDashboardRouteRoute
+  '/dashboard/activity': typeof AuthDashboardActivityRoute
+  '/dashboard/notification': typeof AuthDashboardNotificationRoute
+  '/dashboard/profile': typeof AuthDashboardProfileRoute
+  '/dashboard/settings': typeof AuthDashboardSettingsRoute
+  '/dashboard': typeof AuthDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/forget-password': typeof ForgetPasswordRoute
-  '/_auth/dashboard': typeof AuthDashboardRouteRoute
+  '/_auth/dashboard': typeof AuthDashboardRouteRouteWithChildren
+  '/_auth/dashboard/activity': typeof AuthDashboardActivityRoute
+  '/_auth/dashboard/notification': typeof AuthDashboardNotificationRoute
+  '/_auth/dashboard/profile': typeof AuthDashboardProfileRoute
+  '/_auth/dashboard/settings': typeof AuthDashboardSettingsRoute
+  '/_auth/dashboard/': typeof AuthDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/forget-password' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/forget-password'
+    | '/dashboard'
+    | '/dashboard/activity'
+    | '/dashboard/notification'
+    | '/dashboard/profile'
+    | '/dashboard/settings'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/forget-password' | '/dashboard'
-  id: '__root__' | '/' | '/_auth' | '/forget-password' | '/_auth/dashboard'
+  to:
+    | '/'
+    | '/forget-password'
+    | '/dashboard/activity'
+    | '/dashboard/notification'
+    | '/dashboard/profile'
+    | '/dashboard/settings'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/forget-password'
+    | '/_auth/dashboard'
+    | '/_auth/dashboard/activity'
+    | '/_auth/dashboard/notification'
+    | '/_auth/dashboard/profile'
+    | '/_auth/dashboard/settings'
+    | '/_auth/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,15 +165,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardRouteRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/dashboard/': {
+      id: '/_auth/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthDashboardIndexRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/settings': {
+      id: '/_auth/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthDashboardSettingsRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/profile': {
+      id: '/_auth/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof AuthDashboardProfileRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/notification': {
+      id: '/_auth/dashboard/notification'
+      path: '/notification'
+      fullPath: '/dashboard/notification'
+      preLoaderRoute: typeof AuthDashboardNotificationRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/activity': {
+      id: '/_auth/dashboard/activity'
+      path: '/activity'
+      fullPath: '/dashboard/activity'
+      preLoaderRoute: typeof AuthDashboardActivityRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
   }
 }
 
+interface AuthDashboardRouteRouteChildren {
+  AuthDashboardActivityRoute: typeof AuthDashboardActivityRoute
+  AuthDashboardNotificationRoute: typeof AuthDashboardNotificationRoute
+  AuthDashboardProfileRoute: typeof AuthDashboardProfileRoute
+  AuthDashboardSettingsRoute: typeof AuthDashboardSettingsRoute
+  AuthDashboardIndexRoute: typeof AuthDashboardIndexRoute
+}
+
+const AuthDashboardRouteRouteChildren: AuthDashboardRouteRouteChildren = {
+  AuthDashboardActivityRoute: AuthDashboardActivityRoute,
+  AuthDashboardNotificationRoute: AuthDashboardNotificationRoute,
+  AuthDashboardProfileRoute: AuthDashboardProfileRoute,
+  AuthDashboardSettingsRoute: AuthDashboardSettingsRoute,
+  AuthDashboardIndexRoute: AuthDashboardIndexRoute,
+}
+
+const AuthDashboardRouteRouteWithChildren =
+  AuthDashboardRouteRoute._addFileChildren(AuthDashboardRouteRouteChildren)
+
 interface AuthRouteChildren {
-  AuthDashboardRouteRoute: typeof AuthDashboardRouteRoute
+  AuthDashboardRouteRoute: typeof AuthDashboardRouteRouteWithChildren
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthDashboardRouteRoute: AuthDashboardRouteRoute,
+  AuthDashboardRouteRoute: AuthDashboardRouteRouteWithChildren,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
