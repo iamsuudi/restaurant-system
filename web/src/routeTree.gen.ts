@@ -19,7 +19,9 @@ import { Route as AuthDashboardProfileRouteImport } from './routes/_auth/dashboa
 import { Route as AuthDashboardNotificationRouteImport } from './routes/_auth/dashboard/notification'
 import { Route as AuthDashboardActivityRouteImport } from './routes/_auth/dashboard/activity'
 import { Route as AuthDashboardUsersIndexRouteImport } from './routes/_auth/dashboard/users/index'
+import { Route as AuthDashboardMenuIndexRouteImport } from './routes/_auth/dashboard/menu/index'
 import { Route as AuthDashboardUsersIdRouteImport } from './routes/_auth/dashboard/users/$id'
+import { Route as AuthDashboardMenuIdRouteImport } from './routes/_auth/dashboard/menu/$id'
 
 const ForgetPasswordRoute = ForgetPasswordRouteImport.update({
   id: '/forget-password',
@@ -71,9 +73,19 @@ const AuthDashboardUsersIndexRoute = AuthDashboardUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AuthDashboardRouteRoute,
 } as any)
+const AuthDashboardMenuIndexRoute = AuthDashboardMenuIndexRouteImport.update({
+  id: '/menu/',
+  path: '/menu/',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
 const AuthDashboardUsersIdRoute = AuthDashboardUsersIdRouteImport.update({
   id: '/users/$id',
   path: '/users/$id',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
+const AuthDashboardMenuIdRoute = AuthDashboardMenuIdRouteImport.update({
+  id: '/menu/$id',
+  path: '/menu/$id',
   getParentRoute: () => AuthDashboardRouteRoute,
 } as any)
 
@@ -86,7 +98,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/profile': typeof AuthDashboardProfileRoute
   '/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/dashboard/': typeof AuthDashboardIndexRoute
+  '/dashboard/menu/$id': typeof AuthDashboardMenuIdRoute
   '/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/dashboard/menu': typeof AuthDashboardMenuIndexRoute
   '/dashboard/users': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -97,7 +111,9 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof AuthDashboardProfileRoute
   '/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/dashboard': typeof AuthDashboardIndexRoute
+  '/dashboard/menu/$id': typeof AuthDashboardMenuIdRoute
   '/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/dashboard/menu': typeof AuthDashboardMenuIndexRoute
   '/dashboard/users': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -111,7 +127,9 @@ export interface FileRoutesById {
   '/_auth/dashboard/profile': typeof AuthDashboardProfileRoute
   '/_auth/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexRoute
+  '/_auth/dashboard/menu/$id': typeof AuthDashboardMenuIdRoute
   '/_auth/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/_auth/dashboard/menu/': typeof AuthDashboardMenuIndexRoute
   '/_auth/dashboard/users/': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -125,7 +143,9 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/menu/$id'
     | '/dashboard/users/$id'
+    | '/dashboard/menu'
     | '/dashboard/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -136,7 +156,9 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard'
+    | '/dashboard/menu/$id'
     | '/dashboard/users/$id'
+    | '/dashboard/menu'
     | '/dashboard/users'
   id:
     | '__root__'
@@ -149,7 +171,9 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/profile'
     | '/_auth/dashboard/settings'
     | '/_auth/dashboard/'
+    | '/_auth/dashboard/menu/$id'
     | '/_auth/dashboard/users/$id'
+    | '/_auth/dashboard/menu/'
     | '/_auth/dashboard/users/'
   fileRoutesById: FileRoutesById
 }
@@ -231,11 +255,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardUsersIndexRouteImport
       parentRoute: typeof AuthDashboardRouteRoute
     }
+    '/_auth/dashboard/menu/': {
+      id: '/_auth/dashboard/menu/'
+      path: '/menu'
+      fullPath: '/dashboard/menu'
+      preLoaderRoute: typeof AuthDashboardMenuIndexRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
     '/_auth/dashboard/users/$id': {
       id: '/_auth/dashboard/users/$id'
       path: '/users/$id'
       fullPath: '/dashboard/users/$id'
       preLoaderRoute: typeof AuthDashboardUsersIdRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/menu/$id': {
+      id: '/_auth/dashboard/menu/$id'
+      path: '/menu/$id'
+      fullPath: '/dashboard/menu/$id'
+      preLoaderRoute: typeof AuthDashboardMenuIdRouteImport
       parentRoute: typeof AuthDashboardRouteRoute
     }
   }
@@ -247,7 +285,9 @@ interface AuthDashboardRouteRouteChildren {
   AuthDashboardProfileRoute: typeof AuthDashboardProfileRoute
   AuthDashboardSettingsRoute: typeof AuthDashboardSettingsRoute
   AuthDashboardIndexRoute: typeof AuthDashboardIndexRoute
+  AuthDashboardMenuIdRoute: typeof AuthDashboardMenuIdRoute
   AuthDashboardUsersIdRoute: typeof AuthDashboardUsersIdRoute
+  AuthDashboardMenuIndexRoute: typeof AuthDashboardMenuIndexRoute
   AuthDashboardUsersIndexRoute: typeof AuthDashboardUsersIndexRoute
 }
 
@@ -257,7 +297,9 @@ const AuthDashboardRouteRouteChildren: AuthDashboardRouteRouteChildren = {
   AuthDashboardProfileRoute: AuthDashboardProfileRoute,
   AuthDashboardSettingsRoute: AuthDashboardSettingsRoute,
   AuthDashboardIndexRoute: AuthDashboardIndexRoute,
+  AuthDashboardMenuIdRoute: AuthDashboardMenuIdRoute,
   AuthDashboardUsersIdRoute: AuthDashboardUsersIdRoute,
+  AuthDashboardMenuIndexRoute: AuthDashboardMenuIndexRoute,
   AuthDashboardUsersIndexRoute: AuthDashboardUsersIndexRoute,
 }
 

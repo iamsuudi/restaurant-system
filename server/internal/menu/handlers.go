@@ -2,48 +2,120 @@ package menu
 
 import (
 	"net/http"
-	"restaurant-server/internal/realtime"
+	"path/filepath"
+	"restaurant-server/shared/types"
+	"restaurant-server/shared/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Handlers struct {
-	store *Store
-	hub   *realtime.Hub
+type Handler struct {
+	service *Service
 }
 
-func NewHandlers(store *Store, hub *realtime.Hub) *Handlers { return &Handlers{store: store, hub: hub} }
-
-func (h *Handlers) Get(c *gin.Context) {
-	c.JSON(http.StatusOK, h.store.GetAll())
+func NewHandler(s *Service) *Handler {
+	return &Handler{service: s}
 }
 
-type putReq struct {
-	Items []Item `json:"items" binding:"required"`
-}
-
-func (h *Handlers) Put(c *gin.Context) {
-	userIDRaw, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	_, ok := userIDRaw.(int32)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
-		return
-	}
-
-	var req putReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+func (h *Handler) CreateMenu(c *gin.Context) {
+	var input types.MenuPayload
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	items := h.store.ReplaceAll(req.Items)
-	// broadcast to all waiters
-	h.hub.Emit(realtime.Event{Type: realtime.EventMenuUpdated, Channel: realtime.ChannelMenu, Payload: map[string]interface{}{
-		"items": items,
-	}})
-	c.JSON(http.StatusOK, items)
+
+	pic, err := c.FormFile("picture")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing picture"})
+		return
+	}
+	fileName := utils.MakeFileName(pic.Filename)
+	if err := c.SaveUploadedFile(pic, filepath.Join("uploads", fileName)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
+		return
+	}
+
+	menu, err := h.service.CreateMenu(c, input, fileName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, menu)
+}
+
+func (h *Handler) ListAllMenu(c *gin.Context) {
+	menu, err := h.service.ListAllMenu(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, menu)
+}
+
+func (h *Handler) GetMenuByID(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	menu, err := h.service.GetMenuByID(c, int32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, menu)
+}
+
+func (h *Handler) UpdateMenu(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input struct {
+		Name        string  `form:"name"`
+		Price       float64 `form:"price"`
+		Description string  `form:"description"`
+	}
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var ptr *string
+
+	if pic, err := c.FormFile("picture"); err == nil {
+		fileName := utils.MakeFileName(pic.Filename)
+		if err := c.SaveUploadedFile(pic, filepath.Join("uploads", fileName)); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save image"})
+			return
+		}
+		ptr = &fileName
+	}
+
+	menu, err := h.service.UpdateMenu(c, int32(id), &input.Name, &input.Description, ptr, &input.Price)
+
+	c.JSON(http.StatusOK, menu)
+}
+
+func (h *Handler) DeleteMenu(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	err = h.service.DeleteMenu(c, int32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "menu deleted"})
 }
