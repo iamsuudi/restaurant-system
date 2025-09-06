@@ -37,13 +37,7 @@ export const queryKeys = {
   city: (id: string) => ['query', 'cities', 'one', { id }],
   kebele: (id: string) => ['query', 'kebeles', 'one', { id }],
   subCity: (id: string) => ['query', 'subcities', 'one', { id }],
-  users: (page: number, rows: number, query: string) => [
-    'query',
-    'users',
-    { page },
-    { rows },
-    { query },
-  ],
+  users: () => ['query', 'users'],
   user: (id?: string) => ['query', 'users', 'one', { id }],
   userPermissions: (id?: string) => [
     'query',

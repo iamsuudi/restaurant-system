@@ -18,6 +18,8 @@ import { Route as AuthDashboardSettingsRouteImport } from './routes/_auth/dashbo
 import { Route as AuthDashboardProfileRouteImport } from './routes/_auth/dashboard/profile'
 import { Route as AuthDashboardNotificationRouteImport } from './routes/_auth/dashboard/notification'
 import { Route as AuthDashboardActivityRouteImport } from './routes/_auth/dashboard/activity'
+import { Route as AuthDashboardUsersIndexRouteImport } from './routes/_auth/dashboard/users/index'
+import { Route as AuthDashboardUsersIdRouteImport } from './routes/_auth/dashboard/users/$id'
 
 const ForgetPasswordRoute = ForgetPasswordRouteImport.update({
   id: '/forget-password',
@@ -64,6 +66,16 @@ const AuthDashboardActivityRoute = AuthDashboardActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthDashboardRouteRoute,
 } as any)
+const AuthDashboardUsersIndexRoute = AuthDashboardUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
+const AuthDashboardUsersIdRoute = AuthDashboardUsersIdRouteImport.update({
+  id: '/users/$id',
+  path: '/users/$id',
+  getParentRoute: () => AuthDashboardRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +86,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/profile': typeof AuthDashboardProfileRoute
   '/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/dashboard/': typeof AuthDashboardIndexRoute
+  '/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/dashboard/users': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +97,8 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof AuthDashboardProfileRoute
   '/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/dashboard': typeof AuthDashboardIndexRoute
+  '/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/dashboard/users': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +111,8 @@ export interface FileRoutesById {
   '/_auth/dashboard/profile': typeof AuthDashboardProfileRoute
   '/_auth/dashboard/settings': typeof AuthDashboardSettingsRoute
   '/_auth/dashboard/': typeof AuthDashboardIndexRoute
+  '/_auth/dashboard/users/$id': typeof AuthDashboardUsersIdRoute
+  '/_auth/dashboard/users/': typeof AuthDashboardUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +125,8 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/users/$id'
+    | '/dashboard/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -116,6 +136,8 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/dashboard/settings'
     | '/dashboard'
+    | '/dashboard/users/$id'
+    | '/dashboard/users'
   id:
     | '__root__'
     | '/'
@@ -127,6 +149,8 @@ export interface FileRouteTypes {
     | '/_auth/dashboard/profile'
     | '/_auth/dashboard/settings'
     | '/_auth/dashboard/'
+    | '/_auth/dashboard/users/$id'
+    | '/_auth/dashboard/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,6 +224,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardActivityRouteImport
       parentRoute: typeof AuthDashboardRouteRoute
     }
+    '/_auth/dashboard/users/': {
+      id: '/_auth/dashboard/users/'
+      path: '/users'
+      fullPath: '/dashboard/users'
+      preLoaderRoute: typeof AuthDashboardUsersIndexRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
+    '/_auth/dashboard/users/$id': {
+      id: '/_auth/dashboard/users/$id'
+      path: '/users/$id'
+      fullPath: '/dashboard/users/$id'
+      preLoaderRoute: typeof AuthDashboardUsersIdRouteImport
+      parentRoute: typeof AuthDashboardRouteRoute
+    }
   }
 }
 
@@ -209,6 +247,8 @@ interface AuthDashboardRouteRouteChildren {
   AuthDashboardProfileRoute: typeof AuthDashboardProfileRoute
   AuthDashboardSettingsRoute: typeof AuthDashboardSettingsRoute
   AuthDashboardIndexRoute: typeof AuthDashboardIndexRoute
+  AuthDashboardUsersIdRoute: typeof AuthDashboardUsersIdRoute
+  AuthDashboardUsersIndexRoute: typeof AuthDashboardUsersIndexRoute
 }
 
 const AuthDashboardRouteRouteChildren: AuthDashboardRouteRouteChildren = {
@@ -217,6 +257,8 @@ const AuthDashboardRouteRouteChildren: AuthDashboardRouteRouteChildren = {
   AuthDashboardProfileRoute: AuthDashboardProfileRoute,
   AuthDashboardSettingsRoute: AuthDashboardSettingsRoute,
   AuthDashboardIndexRoute: AuthDashboardIndexRoute,
+  AuthDashboardUsersIdRoute: AuthDashboardUsersIdRoute,
+  AuthDashboardUsersIndexRoute: AuthDashboardUsersIndexRoute,
 }
 
 const AuthDashboardRouteRouteWithChildren =

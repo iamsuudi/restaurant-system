@@ -13,7 +13,12 @@ RETURNING *;
 
 -- name: UpdateUserInfo :one
 UPDATE "user"
-SET name = $2, picture = $5, email = $3, phone = $4
+SET
+    name = COALESCE(sqlc.narg('name'), name),
+    email = COALESCE(sqlc.narg('email'), email),
+    phone = COALESCE(sqlc.narg('phone'), phone),
+    role = COALESCE(sqlc.narg('role'), role),
+    picture = COALESCE(sqlc.narg('picture'), picture)
 WHERE id = $1
 RETURNING *;
 
@@ -29,11 +34,6 @@ WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: GetUserRole :one
 SELECT role FROM "user" WHERE id = $1;
-
--- name: UpdateUserRole :exec
-UPDATE "user"
-SET role = $2
-WHERE id = $1;
 
 -- name: SoftDeleteUser :exec
 UPDATE "user"

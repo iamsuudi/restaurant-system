@@ -181,16 +181,22 @@ func (q *Queries) SoftDeleteUser(ctx context.Context, id int32) error {
 
 const updateUserInfo = `-- name: UpdateUserInfo :one
 UPDATE "user"
-SET name = $2, picture = $5, email = $3, phone = $4
+SET
+    name = COALESCE($2, name),
+    email = COALESCE($3, email),
+    phone = COALESCE($4, phone),
+    role = COALESCE($5, role),
+    picture = COALESCE($6, picture)
 WHERE id = $1
 RETURNING id, name, email, phone, role, picture, created_at, deleted_at
 `
 
 type UpdateUserInfoParams struct {
 	ID      int32   `db:"id" json:"id"`
-	Name    string  `db:"name" json:"name"`
-	Email   string  `db:"email" json:"email"`
-	Phone   string  `db:"phone" json:"phone"`
+	Name    *string `db:"name" json:"name"`
+	Email   *string `db:"email" json:"email"`
+	Phone   *string `db:"phone" json:"phone"`
+	Role    *string `db:"role" json:"role"`
 	Picture *string `db:"picture" json:"picture"`
 }
 
@@ -200,6 +206,7 @@ func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) 
 		arg.Name,
 		arg.Email,
 		arg.Phone,
+		arg.Role,
 		arg.Picture,
 	)
 	var i User
@@ -214,20 +221,4 @@ func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) 
 		&i.DeletedAt,
 	)
 	return i, err
-}
-
-const updateUserRole = `-- name: UpdateUserRole :exec
-UPDATE "user"
-SET role = $2
-WHERE id = $1
-`
-
-type UpdateUserRoleParams struct {
-	ID   int32  `db:"id" json:"id"`
-	Role string `db:"role" json:"role"`
-}
-
-func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
-	_, err := q.db.Exec(ctx, updateUserRole, arg.ID, arg.Role)
-	return err
 }
