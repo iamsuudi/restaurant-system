@@ -9,6 +9,7 @@ import {
   Settings2,
   SquareTerminal,
   TrendingUp,
+  Users,
   Utensils,
   UtensilsCrossed,
 } from 'lucide-react'
@@ -146,6 +147,11 @@ const data = {
       name: 'Orders',
       url: '/dashboard/orders',
       icon: ChefHat,
+    },
+    {
+      name: 'Users',
+      url: '/dashboard/users',
+      icon: Users,
     },
     {
       name: 'Analytics',

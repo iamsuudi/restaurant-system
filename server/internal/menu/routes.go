@@ -2,19 +2,20 @@ package menu
 
 import (
 	"restaurant-server/internal/auth"
-	"restaurant-server/internal/realtime"
+	"restaurant-server/internal/repository"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(rg *gin.RouterGroup, hub *realtime.Hub) {
-	store := NewStore()
-	h := NewHandlers(store, hub)
+func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries) {
+	service := NewService(db, q)
+	handler := NewHandler(service)
 
-	grp := rg.Group("/menu")
+	grp := rg.Group("/menu", auth.Authenticate())
 	{
-		grp.Use(auth.Authenticate())
-		grp.GET("", h.Get)                            // any logged-in user
-		grp.PUT("", auth.Authorize("kitchen"), h.Put) // kitchen only (guarded inside)
+		grp.GET("/", handler.ListAllMenu)
+		grp.PUT("/:id", auth.Authorize("kitchen"), handler.UpdateMenu)
+		grp.POST("/", handler.CreateMenu)
 	}
 }

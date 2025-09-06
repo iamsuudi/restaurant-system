@@ -10,10 +10,10 @@ export const user = {
     })
   },
 
-  usersQuery(page: number, rows: number = 10, query: string = '') {
+  usersQuery() {
     return useQuery({
-      queryKey: queryKeys.users(page, rows, query),
-      queryFn: () => api.getUsers(page, rows, query),
+      queryKey: queryKeys.users(),
+      queryFn: () => api.getUsers(),
     })
   },
 

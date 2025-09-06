@@ -42,7 +42,6 @@ type Querier interface {
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (Order, error)
 	UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) (User, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
-	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
 }
 
 var _ Querier = (*Queries)(nil)

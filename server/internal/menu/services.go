@@ -1,32 +1,49 @@
 package menu
 
-import "sync"
+import (
+	"context"
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/types"
 
-type Item struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Service struct {
+	db *pgxpool.Pool
+	q  *repository.Queries
 }
 
-type Store struct {
-	mu    sync.RWMutex
-	items []Item
+func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
+	return &Service{db: dbConn, q: dbQueries}
 }
 
-func NewStore() *Store { return &Store{} }
-
-func (s *Store) GetAll() []Item {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	cp := make([]Item, len(s.items))
-	copy(cp, s.items)
-	return cp
+func (s *Service) CreateMenu(ctx context.Context, input types.MenuPayload, pic string) (repository.MenuItem, error) {
+	return s.q.CreateMenuItem(ctx, repository.CreateMenuItemParams{
+		Name:        input.Name,
+		Price:       input.Price,
+		Description: &input.Description,
+		Picture:     pic,
+	})
 }
 
-func (s *Store) ReplaceAll(items []Item) []Item {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.items = make([]Item, len(items))
-	copy(s.items, items)
-	return s.GetAll()
+func (s *Service) ListAllMenu(ctx context.Context) ([]repository.MenuItem, error) {
+	return s.q.ListMenuItems(ctx)
+}
+
+func (s *Service) GetMenuByID(ctx context.Context, id int32) (repository.MenuItem, error) {
+	return s.q.GetMenuItem(ctx, id)
+}
+
+func (s *Service) UpdateMenu(ctx context.Context, id int32, name, description, pic *string, price *float64) (repository.MenuItem, error) {
+	return s.q.UpdateMenuItem(ctx, repository.UpdateMenuItemParams{
+		ID:          id,
+		Name:        name,
+		Price:       price,
+		Description: description,
+		Picture:     pic,
+	})
+}
+
+func (s *Service) DeleteMenu(ctx context.Context, id int32) error {
+	return s.q.DeleteMenuItem(ctx, id)
 }

@@ -11,6 +11,7 @@ import (
 	"restaurant-server/internal/orders"
 	"restaurant-server/internal/realtime"
 	"restaurant-server/internal/repository"
+	"restaurant-server/internal/user"
 	"restaurant-server/internal/ws"
 	"restaurant-server/shared/config"
 	"restaurant-server/shared/email"
@@ -37,9 +38,12 @@ func main() {
 
 	r := gin.Default()
 
+	r.Static("/uploads", "./uploads")
+
 	auth.RegisterRoutes(r.Group("/api/auth"), db, q, emailService)
 	orders.RegisterRoutes(r.Group("/api/orders"), hub)
-	menu.RegisterRoutes(r.Group("/api/menus"), hub)
+	menu.RegisterRoutes(r.Group("/api"), db, q)
+	user.RegisterRoutes(r.Group("/api"), db, q)
 
 	// WebSocket endpoints
 	wsGroup := r.Group("/ws")

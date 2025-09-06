@@ -8,11 +8,9 @@ export const user = {
       body: data,
     })
   },
-  async getUsers(page: number = 1, rows: number = 10, query: string = '') {
-    const data = await apiFetch(
-      `/api/users?page=${page}&rows=${rows}&query=${query}`,
-    )
-    return data as { users: Array<User>; count: number }
+  async getUsers() {
+    const data = await apiFetch(`/api/users`)
+    return data as Array<User>
   },
   async getUser(id: string) {
     const data = await apiFetch(`/api/users/${id}`)
