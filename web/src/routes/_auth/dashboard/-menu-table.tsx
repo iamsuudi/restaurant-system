@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { EditDialog } from './menu/-edit'
 import type { Menu } from '@/types/menu'
 import {
   Table,
@@ -43,13 +44,11 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
                 </ImageZoom>
               </TableCell>
               <TableCell className="font-medium">
-                <Link
-                  to={`/dashboard/menu/$id`}
-                  params={{ id: menu.id.toString() }}
-                  className="hover:text-blue-500 hover:underline"
-                >
-                  {menu.name}
-                </Link>
+                <EditDialog id={menu.id}>
+                  <p className="hover:cursor-pointer hover:underline">
+                    {menu.name}r
+                  </p>
+                </EditDialog>
               </TableCell>
               <TableCell className="">
                 <StatusRender id={menu.id} status={menu.status} />

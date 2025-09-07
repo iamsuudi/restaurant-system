@@ -15,6 +15,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries
 	grp := rg.Group("/menu", auth.Authenticate())
 	{
 		grp.GET("/", handler.ListAllMenu)
+		grp.GET("/:id", handler.GetMenuByID)
 		grp.PUT("/:id", auth.Authorize("kitchen"), handler.UpdateMenu)
 		grp.POST("/", handler.CreateMenu)
 	}
