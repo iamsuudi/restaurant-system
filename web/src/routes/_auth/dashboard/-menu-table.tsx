@@ -22,7 +22,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
     <Table className="text-sm rounded-2xl">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20">Item</TableHead>
+          <TableHead className="w-20 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-32 text-center">Status</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
@@ -32,7 +32,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
         {data?.map((menu) => {
           return (
             <TableRow key={menu.id}>
-              <TableCell>
+              <TableCell className="flex justify-center">
                 <ImageZoom>
                   <img
                     width={800}
@@ -67,10 +67,10 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
 
 export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
   return (
-    <Table className="text-sm rounded-2xl">
+    <Table className="text-sm rounded-2xl max-w-md">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20">Item</TableHead>
+          <TableHead className="w-20 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
         </TableRow>
@@ -79,7 +79,7 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
         {data?.map((menu) => {
           return (
             <TableRow key={menu.id}>
-              <TableCell>
+              <TableCell className="text-center">
                 <Drawer>
                   <DrawerTrigger>
                     <img

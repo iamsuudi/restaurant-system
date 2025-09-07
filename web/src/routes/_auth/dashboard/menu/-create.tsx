@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { DropZone } from './-dropzone'
 import { useAppForm } from '@/components/form/form-context'
@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { query } from '@/hooks/query'
+import { Input } from '@/components/ui/input'
 
 const schema = z.object({
   name: z
@@ -24,6 +25,7 @@ const schema = z.object({
     .number({ message: 'Price is required' })
     .min(0, 'Price must be above 0'),
   description: z.string().optional(),
+  ingredients: z.array(z.string()).optional(),
 })
 
 type FormType = z.infer<typeof schema>
@@ -31,9 +33,16 @@ type FormType = z.infer<typeof schema>
 export function CreateDialog() {
   const { mutate, isSuccess, error } = query.createMenu()
   const [documents, setDocuments] = useState<Array<File> | undefined>(undefined)
+  const [current, setCurrent] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const form = useAppForm({
-    defaultValues: { name: '', price: 0, description: '' } as FormType,
+    defaultValues: {
+      name: '',
+      price: 0,
+      description: '',
+      ingredients: [],
+    } as FormType,
     validators: {
       onChange: schema,
     },
@@ -45,6 +54,7 @@ export function CreateDialog() {
       if (documents && documents.length > 0) {
         fd.append('picture', documents[0])
       }
+      value.ingredients?.forEach((item) => fd.append('ingredients', item))
       mutate(fd)
     },
   })
@@ -109,6 +119,63 @@ export function CreateDialog() {
                   />
                 )}
               />
+              <form.AppField name="ingredients" mode="array">
+                {(field) => (
+                  <div>
+                    {/* Render list */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 8,
+                      }}
+                    >
+                      {field.state.value?.map((lang, idx) => (
+                        <div
+                          key={`${lang}-${idx}`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: '#f3f4f6',
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                          }}
+                        >
+                          <p className="text-xs mr-2">{lang}</p>
+                          <button
+                            type="button"
+                            onClick={() => field.removeValue(idx)}
+                            className="text-destructive"
+                            aria-label="Remove language"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* The single input */}
+                    <Input
+                      ref={inputRef}
+                      value={current}
+                      onChange={(e) => setCurrent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const trimmed = current.trim()
+                          if (trimmed) {
+                            field.pushValue(trimmed)
+                            setCurrent('')
+                            inputRef.current?.focus()
+                          }
+                        }
+                      }}
+                      placeholder="Type an ingredient and press Enter"
+                      style={{ marginTop: 12 }}
+                    />
+                  </div>
+                )}
+              </form.AppField>
             </div>
 
             <DropZone file={documents} setFile={setDocuments} />

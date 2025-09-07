@@ -39,17 +39,18 @@ func (q *Queries) AddOrderItem(ctx context.Context, arg AddOrderItemParams) (Ord
 }
 
 const createMenuItem = `-- name: CreateMenuItem :one
-INSERT INTO menu_item (name, description, price, status, picture)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, description, price, picture, status, created_at, updated_at
+INSERT INTO menu_item (name, description, price, status, picture, ingredients)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, name, description, price, picture, status, ingredients, created_at, updated_at
 `
 
 type CreateMenuItemParams struct {
-	Name        string  `db:"name" json:"name"`
-	Description *string `db:"description" json:"description"`
-	Price       float64 `db:"price" json:"price"`
-	Status      bool    `db:"status" json:"status"`
-	Picture     string  `db:"picture" json:"picture"`
+	Name        string   `db:"name" json:"name"`
+	Description *string  `db:"description" json:"description"`
+	Price       float64  `db:"price" json:"price"`
+	Status      bool     `db:"status" json:"status"`
+	Picture     string   `db:"picture" json:"picture"`
+	Ingredients []string `db:"ingredients" json:"ingredients"`
 }
 
 func (q *Queries) CreateMenuItem(ctx context.Context, arg CreateMenuItemParams) (MenuItem, error) {
@@ -59,6 +60,7 @@ func (q *Queries) CreateMenuItem(ctx context.Context, arg CreateMenuItemParams) 
 		arg.Price,
 		arg.Status,
 		arg.Picture,
+		arg.Ingredients,
 	)
 	var i MenuItem
 	err := row.Scan(
@@ -68,6 +70,7 @@ func (q *Queries) CreateMenuItem(ctx context.Context, arg CreateMenuItemParams) 
 		&i.Price,
 		&i.Picture,
 		&i.Status,
+		&i.Ingredients,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -128,7 +131,7 @@ func (q *Queries) DeleteOrderItem(ctx context.Context, id int32) error {
 }
 
 const getMenuItem = `-- name: GetMenuItem :one
-SELECT id, name, description, price, picture, status, created_at, updated_at FROM menu_item WHERE id = $1
+SELECT id, name, description, price, picture, status, ingredients, created_at, updated_at FROM menu_item WHERE id = $1
 `
 
 func (q *Queries) GetMenuItem(ctx context.Context, id int32) (MenuItem, error) {
@@ -141,6 +144,7 @@ func (q *Queries) GetMenuItem(ctx context.Context, id int32) (MenuItem, error) {
 		&i.Price,
 		&i.Picture,
 		&i.Status,
+		&i.Ingredients,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -295,7 +299,7 @@ func (q *Queries) GetOrderWithItems(ctx context.Context, id int32) ([]GetOrderWi
 }
 
 const listMenuItems = `-- name: ListMenuItems :many
-SELECT id, name, description, price, picture, status, created_at, updated_at FROM menu_item ORDER BY created_at DESC
+SELECT id, name, description, price, picture, status, ingredients, created_at, updated_at FROM menu_item ORDER BY created_at DESC
 `
 
 func (q *Queries) ListMenuItems(ctx context.Context) ([]MenuItem, error) {
@@ -314,6 +318,7 @@ func (q *Queries) ListMenuItems(ctx context.Context) ([]MenuItem, error) {
 			&i.Price,
 			&i.Picture,
 			&i.Status,
+			&i.Ingredients,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -366,9 +371,10 @@ SET
     status = COALESCE($4, status),
     picture = COALESCE($5, picture),
     description = COALESCE($6, description),
+    ingredients = COALESCE($7, ingredients),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, description, price, picture, status, created_at, updated_at
+RETURNING id, name, description, price, picture, status, ingredients, created_at, updated_at
 `
 
 type UpdateMenuItemParams struct {
@@ -378,6 +384,7 @@ type UpdateMenuItemParams struct {
 	Status      pgtype.Bool `db:"status" json:"status"`
 	Picture     *string     `db:"picture" json:"picture"`
 	Description *string     `db:"description" json:"description"`
+	Ingredients []string    `db:"ingredients" json:"ingredients"`
 }
 
 func (q *Queries) UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) (MenuItem, error) {
@@ -388,6 +395,7 @@ func (q *Queries) UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) 
 		arg.Status,
 		arg.Picture,
 		arg.Description,
+		arg.Ingredients,
 	)
 	var i MenuItem
 	err := row.Scan(
@@ -397,6 +405,7 @@ func (q *Queries) UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) 
 		&i.Price,
 		&i.Picture,
 		&i.Status,
+		&i.Ingredients,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
