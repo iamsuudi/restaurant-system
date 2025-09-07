@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { ImageZoom } from '@/components/image-zoom'
-import { StatusRender } from '@/components/status-render'
+import { StatusRender } from '@/components/menu-item'
 
 export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
   return (
@@ -116,7 +116,7 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
                             Ingredients
                           </span>
                           <div className="flex flex-wrap gap-5 font-medium mt-2">
-                            {['tomato', 'pepper', 'onion'].map((item) => (
+                            {menu.ingredients?.map((item) => (
                               <span className="bg-primary text-background py-0.5 px-3 text-xs rounded-full w-fit">
                                 {item}
                               </span>

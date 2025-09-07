@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { DropZone } from './-dropzone'
 import { useAppForm } from '@/components/form/form-context'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { query } from '@/hooks/query'
 import { Input } from '@/components/ui/input'
+import { DeleteMenu } from '@/components/menu-item'
 
 const schema = z.object({
   name: z
@@ -191,12 +191,14 @@ export function EditDialog({
             <DropZone file={documents} setFile={setDocuments} />
 
             <DialogFooter className="flex">
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
+              <DialogClose className="">
+                {data && <DeleteMenu id={data.id} />}
               </DialogClose>
-              <form.AppForm>
-                <form.SubscribeButton label="Save" />
-              </form.AppForm>
+              <div className="">
+                <form.AppForm>
+                  <form.SubscribeButton label="Save" />
+                </form.AppForm>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>

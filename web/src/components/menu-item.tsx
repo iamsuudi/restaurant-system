@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
+import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
 import { query } from '@/hooks/query'
 
@@ -52,5 +53,29 @@ export const StatusRender = ({
         {_.capitalize(status ? 'Available' : 'Not Available')}
       </span>
     </button>
+  )
+}
+
+export const DeleteMenu = ({ id }: { id: number }) => {
+  const { mutate, isPending, isSuccess, error } = query.deleteMenu(id)
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success('Successful!')
+    } else if (error) {
+      toast.error('Failed: ' + error.message)
+    }
+  }, [isSuccess, error])
+
+  return (
+    <Button
+      variant="destructive"
+      type="button"
+      disabled={isPending}
+      onClick={() => mutate()}
+      className="hover:cursor-pointer"
+    >
+      Delete
+    </Button>
   )
 }
