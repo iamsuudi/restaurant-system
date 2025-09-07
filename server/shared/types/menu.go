@@ -6,3 +6,11 @@ type MenuPayload struct {
 	Description string   `form:"description"`
 	Ingredients []string `form:"ingredients"`
 }
+
+type MenuEditPayload struct {
+	Name        *string   `form:"name"`
+	Price       *float64  `form:"price" validate:"omitempty,gt=0"`
+	Status      *bool     `form:"status"`
+	Description *string   `form:"description"`
+	Ingredients *[]string `form:"ingredients"`
+}

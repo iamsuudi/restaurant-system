@@ -36,12 +36,13 @@ func (s *Service) GetMenuByID(ctx context.Context, id int32) (repository.MenuIte
 	return s.q.GetMenuItem(ctx, id)
 }
 
-func (s *Service) UpdateMenu(ctx context.Context, id int32, name, description, pic *string, price *float64) (repository.MenuItem, error) {
+func (s *Service) UpdateMenu(ctx context.Context, id int32, input types.MenuEditPayload, pic *string) (repository.MenuItem, error) {
 	return s.q.UpdateMenuItem(ctx, repository.UpdateMenuItemParams{
 		ID:          id,
-		Name:        name,
-		Price:       price,
-		Description: description,
+		Name:        input.Name,
+		Price:       input.Price,
+		Description: input.Description,
+		Status:      input.Status,
 		Picture:     pic,
 	})
 }

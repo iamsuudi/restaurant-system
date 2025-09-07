@@ -378,13 +378,13 @@ RETURNING id, name, description, price, picture, status, ingredients, created_at
 `
 
 type UpdateMenuItemParams struct {
-	ID          int32       `db:"id" json:"id"`
-	Name        *string     `db:"name" json:"name"`
-	Price       *float64    `db:"price" json:"price"`
-	Status      pgtype.Bool `db:"status" json:"status"`
-	Picture     *string     `db:"picture" json:"picture"`
-	Description *string     `db:"description" json:"description"`
-	Ingredients []string    `db:"ingredients" json:"ingredients"`
+	ID          int32    `db:"id" json:"id"`
+	Name        *string  `db:"name" json:"name"`
+	Price       *float64 `db:"price" json:"price"`
+	Status      *bool    `db:"status" json:"status"`
+	Picture     *string  `db:"picture" json:"picture"`
+	Description *string  `db:"description" json:"description"`
+	Ingredients []string `db:"ingredients" json:"ingredients"`
 }
 
 func (q *Queries) UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) (MenuItem, error) {

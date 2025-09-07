@@ -33,6 +33,13 @@ sql:
               type: "string"
               pointer: true
             nullable: true
+          - db_type: "pg_catalog.bool"
+            go_type: "bool"
+          - db_type: "pg_catalog.bool"
+            go_type:
+              type: "bool"
+              pointer: true
+            nullable: true
           - column: "audit_log.diff"
             go_type:
               # for import, package and type please refer the go code above

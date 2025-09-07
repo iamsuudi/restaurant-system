@@ -1,11 +1,37 @@
 import _ from 'lodash'
+import { toast } from 'sonner'
+import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { query } from '@/hooks/query'
 
-export const StatusRender = ({ status }: { status: boolean }) => {
+export const StatusRender = ({
+  status,
+  id,
+}: {
+  status: boolean
+  id: number
+}) => {
+  const { mutate, isSuccess, isPending, error } = query.updateMenu(id)
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success('Successful!')
+    } else if (error) {
+      toast.error('Failed: ' + error.message)
+    }
+  }, [isSuccess, error])
+
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => {
+        const fd = new FormData()
+        fd.append('status', status ? 'false' : 'true')
+        mutate(fd)
+      }}
+      disabled={isPending}
       className={cn(
-        'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs',
+        'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
         {
           'bg-red-100': status == false,
           'bg-green-100': status == true,
@@ -25,6 +51,6 @@ export const StatusRender = ({ status }: { status: boolean }) => {
       >
         {_.capitalize(status ? 'Available' : 'Not Available')}
       </span>
-    </div>
+    </button>
   )
 }

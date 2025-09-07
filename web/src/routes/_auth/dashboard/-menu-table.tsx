@@ -22,7 +22,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
     <Table className="text-sm rounded-2xl">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20 text-center">Item</TableHead>
+          <TableHead className="w-32 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-32 text-center">Status</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
@@ -51,8 +51,8 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
                   {menu.name}
                 </Link>
               </TableCell>
-              <TableCell className="text-center">
-                <StatusRender status={menu.status} />
+              <TableCell className="">
+                <StatusRender id={menu.id} status={menu.status} />
               </TableCell>
               <TableCell className="text-end font-mono">
                 {menu.price.toFixed(2)}
@@ -70,7 +70,7 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
     <Table className="text-sm rounded-2xl max-w-md">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20 text-center">Item</TableHead>
+          <TableHead className="w-32 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
         </TableRow>
