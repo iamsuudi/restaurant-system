@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { EditDialog } from './menu/-edit'
 import type { Menu } from '@/types/menu'
 import {
   Table,
@@ -15,14 +16,14 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { ImageZoom } from '@/components/image-zoom'
-import { StatusRender } from '@/components/status-render'
+import { StatusRender } from '@/components/menu-item'
 
 export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
   return (
     <Table className="text-sm rounded-2xl">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20">Item</TableHead>
+          <TableHead className="w-32 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-32 text-center">Status</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
@@ -32,7 +33,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
         {data?.map((menu) => {
           return (
             <TableRow key={menu.id}>
-              <TableCell>
+              <TableCell className="flex justify-center">
                 <ImageZoom>
                   <img
                     width={800}
@@ -43,16 +44,14 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
                 </ImageZoom>
               </TableCell>
               <TableCell className="font-medium">
-                <Link
-                  to={`/dashboard/menu/$id`}
-                  params={{ id: menu.id.toString() }}
-                  className="hover:text-blue-500 hover:underline"
-                >
-                  {menu.name}
-                </Link>
+                <EditDialog id={menu.id}>
+                  <p className="hover:cursor-pointer hover:underline">
+                    {menu.name}r
+                  </p>
+                </EditDialog>
               </TableCell>
-              <TableCell className="text-center">
-                <StatusRender status={menu.status} />
+              <TableCell className="">
+                <StatusRender id={menu.id} status={menu.status} />
               </TableCell>
               <TableCell className="text-end font-mono">
                 {menu.price.toFixed(2)}
@@ -67,10 +66,10 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
 
 export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
   return (
-    <Table className="text-sm rounded-2xl">
+    <Table className="text-sm rounded-2xl max-w-md">
       <TableHeader>
         <TableRow className="bg-secondary">
-          <TableHead className="w-20">Item</TableHead>
+          <TableHead className="w-32 text-center">Item</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="w-24 text-end">Price</TableHead>
         </TableRow>
@@ -79,7 +78,7 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
         {data?.map((menu) => {
           return (
             <TableRow key={menu.id}>
-              <TableCell>
+              <TableCell className="text-center">
                 <Drawer>
                   <DrawerTrigger>
                     <img
@@ -117,7 +116,7 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
                             Ingredients
                           </span>
                           <div className="flex flex-wrap gap-5 font-medium mt-2">
-                            {['tomato', 'pepper', 'onion'].map((item) => (
+                            {menu.ingredients?.map((item) => (
                               <span className="bg-primary text-background py-0.5 px-3 text-xs rounded-full w-fit">
                                 {item}
                               </span>

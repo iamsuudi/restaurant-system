@@ -29,6 +29,7 @@ export const menu = {
       mutationFn: (data: FormData) => api.updateMenu(id, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.allmenu() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.menu(id) })
       },
     })
   },
@@ -37,6 +38,7 @@ export const menu = {
       mutationFn: () => api.deleteMenu(id),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.allmenu() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.menu(id) })
       },
     })
   },

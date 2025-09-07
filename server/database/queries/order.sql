@@ -1,6 +1,6 @@
 -- name: CreateMenuItem :one
-INSERT INTO menu_item (name, description, price, status, picture)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO menu_item (name, description, price, status, picture, ingredients)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetMenuItem :one
@@ -17,6 +17,7 @@ SET
     status = COALESCE(sqlc.narg('status'), status),
     picture = COALESCE(sqlc.narg('picture'), picture),
     description = COALESCE(sqlc.narg('description'), description),
+    ingredients = COALESCE(sqlc.narg('ingredients'), ingredients),
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

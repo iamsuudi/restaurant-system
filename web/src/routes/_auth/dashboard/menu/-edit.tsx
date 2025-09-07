@@ -1,9 +1,8 @@
 import { toast } from 'sonner'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { DropZone } from './-dropzone'
 import { useAppForm } from '@/components/form/form-context'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { query } from '@/hooks/query'
 import { Input } from '@/components/ui/input'
+import { DeleteMenu } from '@/components/menu-item'
 
 const schema = z.object({
   name: z
@@ -30,18 +30,26 @@ const schema = z.object({
 
 type FormType = z.infer<typeof schema>
 
-export function CreateDialog() {
-  const { mutate, isSuccess, error } = query.createMenu()
+export function EditDialog({
+  id,
+  children,
+}: {
+  id: number
+  children: React.ReactNode
+}) {
+  const { data } = query.getMenu(id)
+  const { mutate, isSuccess, error } = query.updateMenu(id)
+
   const [documents, setDocuments] = useState<Array<File> | undefined>(undefined)
   const [current, setCurrent] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   const form = useAppForm({
     defaultValues: {
-      name: '',
-      price: 0,
-      description: '',
-      ingredients: [],
+      name: data?.name,
+      price: data?.price,
+      description: data?.description,
+      ingredients: data?.ingredients,
     } as FormType,
     validators: {
       onChange: schema,
@@ -72,16 +80,12 @@ export function CreateDialog() {
   return (
     <Dialog>
       <form>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="shadow-md">
-            Create Menu
-          </Button>
-        </DialogTrigger>
+        <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="max-w-md max-h-3/4 overflow-y-scroll">
           <DialogHeader>
-            <DialogTitle>Create Menu</DialogTitle>
+            <DialogTitle>Edit Menu</DialogTitle>
             <DialogDescription>
-              Write detail information about the menu. Click save when
+              Edit detail information about the menu. Click save when
               you&apos;re done.
             </DialogDescription>
           </DialogHeader>
@@ -130,9 +134,9 @@ export function CreateDialog() {
                         gap: 8,
                       }}
                     >
-                      {field.state.value?.map((lang, idx) => (
+                      {field.state.value?.map((item, idx) => (
                         <div
-                          key={`${lang}-${idx}`}
+                          key={`${item}-${idx}`}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -141,12 +145,12 @@ export function CreateDialog() {
                             borderRadius: 4,
                           }}
                         >
-                          <p className="text-xs mr-2">{lang}</p>
+                          <p className="text-xs mr-2">{item}</p>
                           <button
                             type="button"
                             onClick={() => field.removeValue(idx)}
                             className="text-destructive"
-                            aria-label="Remove language"
+                            aria-label="Remove Ingredient"
                           >
                             ✕
                           </button>
@@ -176,20 +180,25 @@ export function CreateDialog() {
                   </div>
                 )}
               </form.AppField>
+              {(!documents || documents.length == 0) && (
+                <img
+                  src={`${import.meta.env.VITE_ASSETS_HOST}/${data?.picture}`}
+                  className="object-contain w-full h-44 rounded-xl block mt-5"
+                />
+              )}
             </div>
 
             <DropZone file={documents} setFile={setDocuments} />
 
             <DialogFooter className="flex">
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
+              <DialogClose className="">
+                {data && <DeleteMenu id={data.id} />}
               </DialogClose>
-              <form.AppForm>
-                <form.SubscribeButton
-                  label="Create"
-                  disabled={!documents || documents.length == 0}
-                />
-              </form.AppForm>
+              <div className="">
+                <form.AppForm>
+                  <form.SubscribeButton label="Save" />
+                </form.AppForm>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -2,10 +2,11 @@ package menu
 
 import (
 	"context"
-	"restaurant-server/internal/repository"
-	"restaurant-server/shared/types"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/types"
 )
 
 type Service struct {
@@ -21,8 +22,9 @@ func (s *Service) CreateMenu(ctx context.Context, input types.MenuPayload, pic s
 	return s.q.CreateMenuItem(ctx, repository.CreateMenuItemParams{
 		Name:        input.Name,
 		Price:       input.Price,
-		Description: &input.Description,
 		Picture:     pic,
+		Description: &input.Description,
+		Ingredients: input.Ingredients,
 	})
 }
 
@@ -34,12 +36,13 @@ func (s *Service) GetMenuByID(ctx context.Context, id int32) (repository.MenuIte
 	return s.q.GetMenuItem(ctx, id)
 }
 
-func (s *Service) UpdateMenu(ctx context.Context, id int32, name, description, pic *string, price *float64) (repository.MenuItem, error) {
+func (s *Service) UpdateMenu(ctx context.Context, id int32, input types.MenuEditPayload, pic *string) (repository.MenuItem, error) {
 	return s.q.UpdateMenuItem(ctx, repository.UpdateMenuItemParams{
 		ID:          id,
-		Name:        name,
-		Price:       price,
-		Description: description,
+		Name:        input.Name,
+		Price:       input.Price,
+		Description: input.Description,
+		Status:      input.Status,
 		Picture:     pic,
 	})
 }

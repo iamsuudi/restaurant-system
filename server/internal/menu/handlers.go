@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"restaurant-server/shared/types"
@@ -78,11 +79,7 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 		return
 	}
 
-	var input struct {
-		Name        string  `form:"name"`
-		Price       float64 `form:"price"`
-		Description string  `form:"description"`
-	}
+	var input types.MenuEditPayload
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -98,8 +95,13 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 		}
 		ptr = &fileName
 	}
-
-	menu, err := h.service.UpdateMenu(c, int32(id), &input.Name, &input.Description, ptr, &input.Price)
+	fmt.Println(input.Status)
+	menu, err := h.service.UpdateMenu(c, int32(id), input, ptr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	fmt.Println(menu)
 
 	c.JSON(http.StatusOK, menu)
 }
