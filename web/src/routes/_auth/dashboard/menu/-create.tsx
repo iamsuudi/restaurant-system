@@ -24,6 +24,7 @@ const schema = z.object({
   price: z
     .number({ message: 'Price is required' })
     .min(0, 'Price must be above 0'),
+  category: z.enum(['appetizer', 'main', 'dessert', 'drink']),
   description: z.string().optional(),
   ingredients: z.array(z.string()).optional(),
 })
@@ -41,6 +42,7 @@ export function CreateDialog() {
       name: '',
       price: 0,
       description: '',
+      category: 'main',
       ingredients: [],
     } as FormType,
     validators: {
@@ -54,6 +56,7 @@ export function CreateDialog() {
       if (documents && documents.length > 0) {
         fd.append('picture', documents[0])
       }
+      fd.append('category', value.category)
       value.ingredients?.forEach((item) => fd.append('ingredients', item))
       mutate(fd)
     },
@@ -107,6 +110,15 @@ export function CreateDialog() {
                     label="Price"
                     step={0.01}
                     placeholder="$79.99"
+                  />
+                )}
+              />
+              <form.AppField
+                name="category"
+                children={(field) => (
+                  <field.SelectField
+                    label="Category"
+                    items={['appetizer', 'main', 'dessert', 'drink']}
                   />
                 )}
               />

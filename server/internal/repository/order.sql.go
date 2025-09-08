@@ -38,49 +38,10 @@ func (q *Queries) AddOrderItem(ctx context.Context, arg AddOrderItemParams) (Ord
 	return i, err
 }
 
-const createMenuItem = `-- name: CreateMenuItem :one
-INSERT INTO menu_item (name, description, price, status, picture, ingredients)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, name, description, price, picture, status, ingredients, created_at, updated_at
-`
-
-type CreateMenuItemParams struct {
-	Name        string   `db:"name" json:"name"`
-	Description *string  `db:"description" json:"description"`
-	Price       float64  `db:"price" json:"price"`
-	Status      bool     `db:"status" json:"status"`
-	Picture     string   `db:"picture" json:"picture"`
-	Ingredients []string `db:"ingredients" json:"ingredients"`
-}
-
-func (q *Queries) CreateMenuItem(ctx context.Context, arg CreateMenuItemParams) (MenuItem, error) {
-	row := q.db.QueryRow(ctx, createMenuItem,
-		arg.Name,
-		arg.Description,
-		arg.Price,
-		arg.Status,
-		arg.Picture,
-		arg.Ingredients,
-	)
-	var i MenuItem
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Price,
-		&i.Picture,
-		&i.Status,
-		&i.Ingredients,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const createOrder = `-- name: CreateOrder :one
 INSERT INTO "order" (waiter_id, status, table_number)
 VALUES ($1, $2, $3)
-RETURNING id, waiter_id, status, table_number, created_at, updated_at
+RETURNING id, waiter_id, status, table_number, created_at, delivered_at, updated_at
 `
 
 type CreateOrderParams struct {
@@ -98,18 +59,10 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		&i.Status,
 		&i.TableNumber,
 		&i.CreatedAt,
+		&i.DeliveredAt,
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const deleteMenuItem = `-- name: DeleteMenuItem :exec
-DELETE FROM menu_item WHERE id = $1
-`
-
-func (q *Queries) DeleteMenuItem(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteMenuItem, id)
-	return err
 }
 
 const deleteOrder = `-- name: DeleteOrder :exec
@@ -130,42 +83,22 @@ func (q *Queries) DeleteOrderItem(ctx context.Context, id int32) error {
 	return err
 }
 
-const getMenuItem = `-- name: GetMenuItem :one
-SELECT id, name, description, price, picture, status, ingredients, created_at, updated_at FROM menu_item WHERE id = $1
-`
-
-func (q *Queries) GetMenuItem(ctx context.Context, id int32) (MenuItem, error) {
-	row := q.db.QueryRow(ctx, getMenuItem, id)
-	var i MenuItem
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Price,
-		&i.Picture,
-		&i.Status,
-		&i.Ingredients,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const getOrder = `-- name: GetOrder :one
-SELECT o.id, o.waiter_id, o.status, o.table_number, o.created_at, o.updated_at, u.name AS waiter_name
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
 WHERE o.id = $1
 `
 
 type GetOrderRow struct {
-	ID          int32     `db:"id" json:"id"`
-	WaiterID    *int32    `db:"waiter_id" json:"waiter_id"`
-	Status      string    `db:"status" json:"status"`
-	TableNumber *string   `db:"table_number" json:"table_number"`
-	CreatedAt   time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
-	WaiterName  *string   `db:"waiter_name" json:"waiter_name"`
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber *string    `db:"table_number" json:"table_number"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
 }
 
 func (q *Queries) GetOrder(ctx context.Context, id int32) (GetOrderRow, error) {
@@ -177,6 +110,7 @@ func (q *Queries) GetOrder(ctx context.Context, id int32) (GetOrderRow, error) {
 		&i.Status,
 		&i.TableNumber,
 		&i.CreatedAt,
+		&i.DeliveredAt,
 		&i.UpdatedAt,
 		&i.WaiterName,
 	)
@@ -298,42 +232,8 @@ func (q *Queries) GetOrderWithItems(ctx context.Context, id int32) ([]GetOrderWi
 	return items, nil
 }
 
-const listMenuItems = `-- name: ListMenuItems :many
-SELECT id, name, description, price, picture, status, ingredients, created_at, updated_at FROM menu_item ORDER BY created_at DESC
-`
-
-func (q *Queries) ListMenuItems(ctx context.Context) ([]MenuItem, error) {
-	rows, err := q.db.Query(ctx, listMenuItems)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []MenuItem{}
-	for rows.Next() {
-		var i MenuItem
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Price,
-			&i.Picture,
-			&i.Status,
-			&i.Ingredients,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listOrders = `-- name: ListOrders :many
-SELECT id, waiter_id, status, table_number, created_at, updated_at FROM "order" ORDER BY created_at DESC
+SELECT id, waiter_id, status, table_number, created_at, delivered_at, updated_at FROM "order" ORDER BY created_at DESC
 `
 
 func (q *Queries) ListOrders(ctx context.Context) ([]Order, error) {
@@ -351,6 +251,7 @@ func (q *Queries) ListOrders(ctx context.Context) ([]Order, error) {
 			&i.Status,
 			&i.TableNumber,
 			&i.CreatedAt,
+			&i.DeliveredAt,
 			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
@@ -361,55 +262,6 @@ func (q *Queries) ListOrders(ctx context.Context) ([]Order, error) {
 		return nil, err
 	}
 	return items, nil
-}
-
-const updateMenuItem = `-- name: UpdateMenuItem :one
-UPDATE menu_item
-SET
-    name = COALESCE($2, name),
-    price = COALESCE($3, price),
-    status = COALESCE($4, status),
-    picture = COALESCE($5, picture),
-    description = COALESCE($6, description),
-    ingredients = COALESCE($7, ingredients),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING id, name, description, price, picture, status, ingredients, created_at, updated_at
-`
-
-type UpdateMenuItemParams struct {
-	ID          int32    `db:"id" json:"id"`
-	Name        *string  `db:"name" json:"name"`
-	Price       *float64 `db:"price" json:"price"`
-	Status      *bool    `db:"status" json:"status"`
-	Picture     *string  `db:"picture" json:"picture"`
-	Description *string  `db:"description" json:"description"`
-	Ingredients []string `db:"ingredients" json:"ingredients"`
-}
-
-func (q *Queries) UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) (MenuItem, error) {
-	row := q.db.QueryRow(ctx, updateMenuItem,
-		arg.ID,
-		arg.Name,
-		arg.Price,
-		arg.Status,
-		arg.Picture,
-		arg.Description,
-		arg.Ingredients,
-	)
-	var i MenuItem
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.Price,
-		&i.Picture,
-		&i.Status,
-		&i.Ingredients,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const updateOrderItemQuantity = `-- name: UpdateOrderItemQuantity :one
@@ -444,7 +296,7 @@ UPDATE "order"
 SET status = $2,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, waiter_id, status, table_number, created_at, updated_at
+RETURNING id, waiter_id, status, table_number, created_at, delivered_at, updated_at
 `
 
 type UpdateOrderStatusParams struct {
@@ -461,6 +313,7 @@ func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusPa
 		&i.Status,
 		&i.TableNumber,
 		&i.CreatedAt,
+		&i.DeliveredAt,
 		&i.UpdatedAt,
 	)
 	return i, err

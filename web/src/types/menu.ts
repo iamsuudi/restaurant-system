@@ -5,5 +5,6 @@ export interface Menu {
   price: number
   status: boolean
   picture: string
+  category: string
   ingredients?: Array<string>
 }
