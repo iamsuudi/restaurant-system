@@ -1,21 +1,24 @@
 package orders
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"restaurant-server/internal/auth"
-	"restaurant-server/internal/realtime"
+	"restaurant-server/internal/repository"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func RegisterRoutes(rg *gin.RouterGroup, hub *realtime.Hub) {
-	store := NewStore()
-	h := NewHandlers(store, hub)
+func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries) {
+	service := NewService(db, q)
+	handler := NewHandler(service)
 
-	grp := rg.Group("/orders")
+	grp := rg.Group("/orders", auth.Authenticate())
 	{
-		grp.Use(auth.Authenticate())
-		grp.POST("", auth.Authorize("waiter"), h.Create)            // waiter
-		grp.PATCH(":id", auth.Authorize("kitchen"), h.UpdateStatus) // kitchen
-		grp.GET("", h.List)                                         // waiter → own, kitchen → all
+		grp.GET("/", handler.ListOrders)
+		grp.GET("/completed", handler.ListCompletedOrders)
+		grp.GET("/:id", handler.GetOrder)
+		grp.PUT("/:id", auth.Authorize("kitchen", "waiter"), handler.UpdateOrder)
+		grp.DELETE("/:id", auth.Authorize("kitchen", "waiter"), handler.DeleteOrder)
+		grp.POST("/", handler.CreateOrder)
 	}
 }

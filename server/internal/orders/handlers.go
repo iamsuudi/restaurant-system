@@ -2,82 +2,131 @@ package orders
 
 import (
 	"net/http"
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/types"
+	"restaurant-server/shared/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-
-	"restaurant-server/internal/realtime"
 )
 
-type Handlers struct {
-	store *Store
-	hub   *realtime.Hub
+type Handler struct {
+	service *Service
 }
 
-func NewHandlers(store *Store, hub *realtime.Hub) *Handlers { return &Handlers{store: store, hub: hub} }
-
-type createReq struct {
-	Table string   `json:"table" binding:"required"`
-	Items []string `json:"items" binding:"required,min=1"`
+func NewHandler(s *Service) *Handler {
+	return &Handler{service: s}
 }
 
-func (h *Handlers) Create(c *gin.Context) {
-	userIDRaw, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
+func (h *Handler) CreateOrder(c *gin.Context) {
+	raw, _ := c.Get("user_id")
+	actorID, _ := raw.(int32)
 
-	userID, ok := userIDRaw.(int32)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
-		return
-	}
-	var req createReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var input types.OrderPayload
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	o := h.store.Create(req.Table, req.Items, userID)
-	// broadcast to kitchen + owning waiter
-	h.hub.Emit(realtime.Event{Type: realtime.EventOrderCreated, Channel: realtime.ChannelOrders, Payload: map[string]interface{}{
-		"id": o.ID, "table": o.Table, "items": o.Items, "status": o.Status, "waiterId": o.WaiterID,
-	}})
-	c.JSON(http.StatusCreated, o)
-}
 
-type updReq struct {
-	Status Status `json:"status" binding:"required"`
-}
-
-func (h *Handlers) UpdateStatus(c *gin.Context) {
-	userIDRaw, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	_, ok := userIDRaw.(int32)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
-		return
-	}
-	id := c.Param("id")
-	var req updReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	o, err := h.store.UpdateStatus(id, req.Status)
+	err := h.service.CreateOrder(c, &actorID, input)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	h.hub.Emit(realtime.Event{Type: realtime.EventOrderUpdated, Channel: realtime.ChannelOrders, Payload: map[string]interface{}{
-		"id": o.ID, "table": o.Table, "items": o.Items, "status": o.Status, "waiterId": o.WaiterID,
-	}})
-	c.JSON(http.StatusOK, o)
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Order created successfully"})
 }
 
-func (h *Handlers) List(c *gin.Context) {
-	c.JSON(http.StatusOK, h.store.ListAll())
+func (h *Handler) ListOrders(c *gin.Context) {
+	limit, offset, _ := utils.PaginationHelper(c)
+
+	count, orders, err := h.service.ListOrders(c, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	if orders == nil {
+		orders = []repository.ListOrdersRow{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+		"count":  count,
+	})
+}
+
+func (h *Handler) ListCompletedOrders(c *gin.Context) {
+	limit, offset, _ := utils.PaginationHelper(c)
+
+	count, orders, err := h.service.ListCompletedOrders(c, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	if orders == nil {
+		orders = []repository.ListCompletedOrdersRow{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+		"count":  count,
+	})
+}
+
+func (h *Handler) GetOrder(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	order, err := h.service.GetOrder(c, int32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, order)
+}
+
+func (h *Handler) UpdateOrder(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input types.OrderEditPayload
+	if err := c.ShouldBind(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.EditOrder(c, &actorID, int32(id), input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Order updated"})
+}
+
+func (h *Handler) DeleteOrder(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	err = h.service.DeleteOrder(c, int32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Order deleted"})
 }

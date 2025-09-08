@@ -1,106 +1,190 @@
 package orders
 
 import (
+	"context"
 	"errors"
-	"sort"
-	"sync"
-	"time"
+
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/types"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Status string
-
-const (
-	Pending   Status = "pending"
-	InProcess Status = "in_process"
-	Ready     Status = "ready"
-)
-
-type Order struct {
-	ID        string    `json:"id"`
-	Table     string    `json:"table"`
-	Items     []string  `json:"items"`
-	Status    Status    `json:"status"`
-	WaiterID  int32     `json:"waiterId"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+type Service struct {
+	db *pgxpool.Pool
+	q  *repository.Queries
 }
 
-type Store struct {
-	mu     sync.RWMutex
-	seq    int
-	orders map[string]*Order
+func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
+	return &Service{db: dbConn, q: dbQueries}
 }
 
-func NewStore() *Store { return &Store{orders: map[string]*Order{}} }
-
-func (s *Store) Create(table string, items []string, waiterID int32) *Order {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.seq++
-	id := time.Now().Format("20060102150405") + "-" + itoa(s.seq)
-	o := &Order{ID: id, Table: table, Items: items, Status: Pending, WaiterID: waiterID, CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	s.orders[o.ID] = o
-	return o
-}
-
-func (s *Store) UpdateStatus(id string, st Status) (*Order, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	o, ok := s.orders[id]
-	if !ok {
-		return nil, errors.New("not found")
+func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.OrderPayload) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
 	}
-	o.Status = st
-	o.UpdatedAt = time.Now()
-	return o, nil
-}
+	defer tx.Rollback(ctx)
 
-func (s *Store) ListAll() []*Order {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	res := make([]*Order, 0, len(s.orders))
-	for _, o := range s.orders {
-		res = append(res, clone(o))
+	qtx := s.q.WithTx(tx)
+
+	// 1. Create order
+	order, err := qtx.CreateOrder(ctx, repository.CreateOrderParams{
+		WaiterID:    actorID,
+		Status:      "Pending",
+		TableNumber: input.Table,
+	})
+	if err != nil {
+		return err
 	}
-	sort.Slice(res, func(i, j int) bool { return res[i].CreatedAt.Before(res[j].CreatedAt) })
-	return res
-}
 
-func (s *Store) ListByWaiter(wid int32) []*Order {
-	all := s.ListAll()
-	out := make([]*Order, 0)
-	for _, o := range all {
-		if o.WaiterID == wid {
-			out = append(out, o)
+	// 2. Create Order-Items
+	for itemID, quantity := range input.Items {
+		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
+			OrderID:    order.ID,
+			MenuItemID: itemID,
+			Quantity:   quantity,
+		})
+		if err != nil {
+			return err
 		}
 	}
-	return out
+
+	// 3. Insert audit log
+	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+	// 	ActorID:          actorID,
+	// 	TargetResidentID: &resident.ID,
+	// 	ActionType:       "CREATE_RESIDENT",
+	// 	ObjectType:       "resident",
+	// 	Diff: map[string]any{
+	// 		"after": resident,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	return tx.Commit(ctx)
 }
 
-func clone(o *Order) *Order { c := *o; return &c }
+func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input types.OrderEditPayload) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
-func itoa(i int) string { return fmtInt(i) }
+	qtx := s.q.WithTx(tx)
 
-// tiny no-import int→string to keep file self-contained
-func fmtInt(i int) string {
-	if i == 0 {
-		return "0"
+	// 1. Get order
+	order, err := qtx.GetOrder(ctx, id)
+	if err != nil {
+		return err
 	}
-	neg := false
-	if i < 0 {
-		neg = true
-		i = -i
+
+	if order.Status != "Pending" {
+		return errors.New("Status must be pending")
 	}
-	buf := [20]byte{}
-	pos := len(buf)
-	for i > 0 {
-		pos--
-		buf[pos] = byte('0' + (i % 10))
-		i /= 10
+
+	status := "Pending"
+
+	// 2. Create order
+	_, err = qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
+		ID:          order.ID,
+		WaiterID:    actorID,
+		Status:      &status,
+		TableNumber: input.Table,
+	})
+	if err != nil {
+		return err
 	}
-	if neg {
-		pos--
-		buf[pos] = '-'
+
+	// 2. Update Order-Items
+	err = qtx.ClearOrderItems(ctx, order.ID)
+	if err != nil {
+		return err
 	}
-	return string(buf[pos:])
+	newItems := map[int32]int32{}
+	if input.Items != nil {
+		newItems = *input.Items
+	}
+	for itemID, quantity := range newItems {
+		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
+			OrderID:    order.ID,
+			MenuItemID: itemID,
+			Quantity:   quantity,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// 3. Insert audit log
+	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+	// 	ActorID:          actorID,
+	// 	TargetResidentID: &resident.ID,
+	// 	ActionType:       "CREATE_RESIDENT",
+	// 	ObjectType:       "resident",
+	// 	Diff: map[string]any{
+	// 		"after": resident,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	return tx.Commit(ctx)
+}
+
+func (s *Service) GetOrder(ctx context.Context, id int32) ([]repository.GetOrderWithItemsRow, error) {
+	return s.q.GetOrderWithItems(ctx, id)
+}
+
+func (s *Service) GetOrderItems(ctx context.Context, id int32) ([]repository.GetOrderItemsRow, error) {
+	return s.q.GetOrderItems(ctx, id)
+}
+
+func (s *Service) UpdateOrderStatus(ctx context.Context, id int32, status string) (repository.Order, error) {
+	return s.q.UpdateOrderStatus(ctx, repository.UpdateOrderStatusParams{
+		ID:     id,
+		Status: status,
+	})
+}
+
+func (s *Service) ListOrders(ctx context.Context, limit, offset int) (int64, []repository.ListOrdersRow, error) {
+	count, err := s.q.CountListOrders(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	orders, err := s.q.ListOrders(ctx, repository.ListOrdersParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return count, orders, nil
+}
+
+func (s *Service) ListCompletedOrders(ctx context.Context, limit, offset int) (int64, []repository.ListCompletedOrdersRow, error) {
+	count, err := s.q.CountListCompletedOrders(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	orders, err := s.q.ListCompletedOrders(ctx, repository.ListCompletedOrdersParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return count, orders, nil
+}
+
+func (s *Service) DeleteOrder(ctx context.Context, id int32) error {
+	return s.q.DeleteOrder(ctx, id)
 }

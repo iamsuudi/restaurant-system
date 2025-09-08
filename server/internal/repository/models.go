@@ -33,7 +33,9 @@ type Order struct {
 	ID          int32      `db:"id" json:"id"`
 	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
 	Status      string     `db:"status" json:"status"`
-	TableNumber *string    `db:"table_number" json:"table_number"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float64    `db:"total_price" json:"total_price"`
 	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
 	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
 	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`

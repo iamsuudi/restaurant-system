@@ -41,7 +41,7 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	auth.RegisterRoutes(r.Group("/api/auth"), db, q, emailService)
-	orders.RegisterRoutes(r.Group("/api/orders"), hub)
+	orders.RegisterRoutes(r.Group("/api"), db, q)
 	menu.RegisterRoutes(r.Group("/api"), db, q)
 	user.RegisterRoutes(r.Group("/api"), db, q)
 
