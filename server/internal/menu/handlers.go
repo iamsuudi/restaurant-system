@@ -1,7 +1,6 @@
 package menu
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"restaurant-server/shared/types"
@@ -95,13 +94,12 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 		}
 		ptr = &fileName
 	}
-	fmt.Println(input.Status)
+
 	menu, err := h.service.UpdateMenu(c, int32(id), input, ptr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println(menu)
 
 	c.JSON(http.StatusOK, menu)
 }

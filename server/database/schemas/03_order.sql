@@ -2,7 +2,9 @@ CREATE TABLE "order" (
     id               SERIAL PRIMARY KEY,
     waiter_id        INTEGER REFERENCES "user"(id),
     status           VARCHAR(255) NOT NULL DEFAULT 'PENDING',
-    table_number     TEXT,
+    table_number     VARCHAR(5) NOT NULL,
+    note             TEXT,
+    total_price      FLOAT NOT NULL,
     created_at       TIMESTAMP(3) NOT NULL DEFAULT NOW(),
     delivered_at     TIMESTAMP(3),
     updated_at       TIMESTAMP(3) NOT NULL DEFAULT NOW()
