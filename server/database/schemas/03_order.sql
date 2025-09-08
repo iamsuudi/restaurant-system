@@ -1,21 +1,10 @@
-CREATE TABLE menu_item (
-    id               SERIAL PRIMARY KEY,
-    name             VARCHAR(255) NOT NULL,
-    description      TEXT,
-    price            DECIMAL(10, 2) NOT NULL,
-    picture          TEXT NOT NULL,
-    status           BOOLEAN NOT NULL DEFAULT FALSE,
-    ingredients      TEXT[],
-    created_at       TIMESTAMP(3) NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMP(3) NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE "order" (
     id               SERIAL PRIMARY KEY,
     waiter_id        INTEGER REFERENCES "user"(id),
     status           VARCHAR(255) NOT NULL DEFAULT 'PENDING',
     table_number     TEXT,
     created_at       TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+    delivered_at     TIMESTAMP(3),
     updated_at       TIMESTAMP(3) NOT NULL DEFAULT NOW()
 );
 

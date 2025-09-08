@@ -22,6 +22,7 @@ type MenuItem struct {
 	Description *string   `db:"description" json:"description"`
 	Price       float64   `db:"price" json:"price"`
 	Picture     string    `db:"picture" json:"picture"`
+	Category    string    `db:"category" json:"category"`
 	Status      bool      `db:"status" json:"status"`
 	Ingredients []string  `db:"ingredients" json:"ingredients"`
 	CreatedAt   time.Time `db:"created_at" json:"created_at"`
@@ -29,12 +30,13 @@ type MenuItem struct {
 }
 
 type Order struct {
-	ID          int32     `db:"id" json:"id"`
-	WaiterID    *int32    `db:"waiter_id" json:"waiter_id"`
-	Status      string    `db:"status" json:"status"`
-	TableNumber *string   `db:"table_number" json:"table_number"`
-	CreatedAt   time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at" json:"updated_at"`
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber *string    `db:"table_number" json:"table_number"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
 }
 
 type OrderItem struct {

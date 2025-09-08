@@ -23,6 +23,7 @@ func (s *Service) CreateMenu(ctx context.Context, input types.MenuPayload, pic s
 		Name:        input.Name,
 		Price:       input.Price,
 		Picture:     pic,
+		Category:    input.Category,
 		Description: &input.Description,
 		Ingredients: input.Ingredients,
 	})
@@ -42,6 +43,7 @@ func (s *Service) UpdateMenu(ctx context.Context, id int32, input types.MenuEdit
 		Name:        input.Name,
 		Price:       input.Price,
 		Description: input.Description,
+		Category:    input.Category,
 		Status:      input.Status,
 		Picture:     pic,
 	})

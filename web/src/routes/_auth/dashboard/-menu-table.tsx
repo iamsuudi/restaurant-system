@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Minus, Plus, Trash2 } from 'lucide-react'
+import _ from 'lodash'
 import { EditDialog } from './menu/-edit'
 import type { Menu } from '@/types/menu'
 import {
@@ -77,50 +78,37 @@ interface Order {
 export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
   const [selectedMenu, setSelectedMenu] = useState<Array<Order>>([])
   const [note, setNote] = useState('')
+  const [display, setDisplay] = useState(false)
 
   return (
     <div className="w-full flex flex-col gap-10 md:flex-row">
-      <Tabs defaultValue="appetizers" className="flex-1">
+      <Tabs defaultValue="appetizer" className="flex-1">
         <TabsList className="w-full">
-          <TabsTrigger value="appetizers">Appetizers</TabsTrigger>
+          <TabsTrigger value="appetizer">Appetizers</TabsTrigger>
           <TabsTrigger value="main">Main Courses</TabsTrigger>
-          <TabsTrigger value="desserts">Desserts</TabsTrigger>
-          <TabsTrigger value="drinks">Drinks</TabsTrigger>
+          <TabsTrigger value="dessert">Desserts</TabsTrigger>
+          <TabsTrigger value="drink">Drinks</TabsTrigger>
         </TabsList>
-        <TabsContent value="main" className="py-5">
-          {data?.map((menu) => (
-            <div className="w-40 space-y-4">
-              <img
-                src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
-                onClick={() => {
-                  if (!selectedMenu.some((item) => item.menu.id === menu.id)) {
-                    setSelectedMenu([...selectedMenu, { menu, count: 1 }])
-                  } else {
-                    setSelectedMenu(
-                      selectedMenu.map((item) =>
-                        item.menu.id === menu.id
-                          ? { ...item, count: item.count + 1 }
-                          : item,
-                      ),
-                    )
-                  }
-                }}
-                className=" rounded-xl size-40"
-              />
-              <div>
-                <MenuDetail menu={menu}>
-                  <p className="font-bold">{menu.name}</p>
-                </MenuDetail>
-                <p className="text-gray-500 text-sm text-ellipsis h-10 overflow-clip">
-                  {menu.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </TabsContent>
+        {['appetizer', 'main', 'dessert', 'drink'].map((tab) => (
+          <TabsContent value={tab} className="py-5">
+            {data
+              ?.filter((menu) => menu.category === tab)
+              .map((menu) => (
+                <MenuBox
+                  display={display}
+                  setDisplay={setDisplay}
+                  selectedMenu={selectedMenu}
+                  setSelectedMenu={setSelectedMenu}
+                  menu={menu}
+                />
+              ))}
+          </TabsContent>
+        ))}
       </Tabs>
 
       <OrderBox
+        display={display}
+        setDisplay={setDisplay}
         selectedMenu={selectedMenu}
         setSelectedMenu={setSelectedMenu}
         note={note}
@@ -130,17 +118,67 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
   )
 }
 
+function MenuBox({
+  display,
+  setDisplay,
+  selectedMenu,
+  setSelectedMenu,
+  menu,
+}: {
+  display: boolean
+  setDisplay: React.Dispatch<React.SetStateAction<boolean>>
+  selectedMenu: Array<Order>
+  setSelectedMenu: React.Dispatch<React.SetStateAction<Array<Order>>>
+  menu: Menu
+}) {
+  return (
+    <div className="w-40 space-y-4">
+      <img
+        src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
+        onClick={() => {
+          if (!selectedMenu.some((item) => item.menu.id === menu.id)) {
+            setSelectedMenu([...selectedMenu, { menu, count: 1 }])
+          } else {
+            setSelectedMenu(
+              selectedMenu.map((item) =>
+                item.menu.id === menu.id
+                  ? { ...item, count: item.count + 1 }
+                  : item,
+              ),
+            )
+          }
+          if (!display) setDisplay(true)
+        }}
+        className=" rounded-xl size-40"
+      />
+      <div>
+        <MenuDetail menu={menu}>
+          <p className="font-bold">{menu.name}</p>
+        </MenuDetail>
+        <p className="text-gray-500 text-sm text-ellipsis h-10 overflow-clip">
+          {menu.description}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function OrderBox({
+  display,
+  setDisplay,
   selectedMenu,
   setSelectedMenu,
   note,
   setNote,
 }: {
+  display: boolean
+  setDisplay: React.Dispatch<React.SetStateAction<boolean>>
   selectedMenu: Array<Order>
   setSelectedMenu: React.Dispatch<React.SetStateAction<Array<Order>>>
   note: string
   setNote: React.Dispatch<React.SetStateAction<string>>
 }) {
+  if (!display) return null
   return (
     <div className="flex-1 flex flex-col gap-6 p-4 shadow-xl rounded-2xl max-w-sm">
       <p className="font-bold text-2xl">Order Summary</p>
@@ -155,13 +193,21 @@ function OrderBox({
                 <button
                   className="size-6 flex items-center justify-center rounded-full border hover:scale-110"
                   onClick={() => {
-                    setSelectedMenu(
-                      selectedMenu.map((item) =>
-                        item.menu.id == order.menu.id
-                          ? { ...item, count: item.count - 1 }
-                          : item,
-                      ),
-                    )
+                    if (order.count === 1) {
+                      setSelectedMenu(
+                        selectedMenu.filter(
+                          ({ menu }) => menu.id != order.menu.id,
+                        ),
+                      )
+                    } else {
+                      setSelectedMenu(
+                        selectedMenu.map((item) =>
+                          item.menu.id == order.menu.id
+                            ? { ...item, count: item.count - 1 }
+                            : item,
+                        ),
+                      )
+                    }
                   }}
                 >
                   <Minus className="size-4 text-destructive" />
@@ -186,7 +232,9 @@ function OrderBox({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="font-mono text-sm">{order.menu.price}</span>
+              <span className="font-mono text-sm">
+                {order.menu.price.toFixed(2)}
+              </span>
               <button
                 className="size-6 flex items-center justify-center hover:scale-110"
                 onClick={() => {
@@ -248,7 +296,7 @@ function OrderBox({
       <Button>Submit Order</Button>
       <div className="flex gap-2">
         <Button
-          variant="outline"
+          variant="destructive"
           className="flex-1"
           onClick={() => setSelectedMenu([])}
         >
@@ -257,7 +305,10 @@ function OrderBox({
         <Button
           variant="outline"
           className="flex-1"
-          onClick={() => setSelectedMenu([])}
+          onClick={() => {
+            setSelectedMenu([])
+            setDisplay(false)
+          }}
         >
           Cancel
         </Button>
@@ -295,7 +346,7 @@ function MenuDetail({
             </div>
             <div className="flex flex-col">
               <span className="text-gray-500 text-sm">Category</span>
-              <span className="font-black">Food</span>
+              <span className="font-black">{_.capitalize(menu.category)}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-gray-500 text-sm">Ingredients</span>
