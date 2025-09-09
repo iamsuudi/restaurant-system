@@ -32,18 +32,20 @@ func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.O
 	order, err := qtx.CreateOrder(ctx, repository.CreateOrderParams{
 		WaiterID:    actorID,
 		Status:      "Pending",
-		TableNumber: input.Table,
+		TableNumber: input.TableNumber,
+		Note:        input.Note,
+		TotalPrice:  input.Total,
 	})
 	if err != nil {
 		return err
 	}
 
 	// 2. Create Order-Items
-	for itemID, quantity := range input.Items {
+	for _, item := range input.Items {
 		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
 			OrderID:    order.ID,
-			MenuItemID: itemID,
-			Quantity:   quantity,
+			MenuItemID: item.MenuID,
+			Quantity:   item.Count,
 		})
 		if err != nil {
 			return err
@@ -93,7 +95,9 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 		ID:          order.ID,
 		WaiterID:    actorID,
 		Status:      &status,
-		TableNumber: input.Table,
+		Note:        input.Note,
+		TableNumber: input.TableNumber,
+		TotalPrice:  input.Total,
 	})
 	if err != nil {
 		return err
@@ -104,15 +108,15 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 	if err != nil {
 		return err
 	}
-	newItems := map[int32]int32{}
+	newItems := types.ItemsType{}
 	if input.Items != nil {
 		newItems = *input.Items
 	}
-	for itemID, quantity := range newItems {
+	for _, item := range newItems {
 		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
 			OrderID:    order.ID,
-			MenuItemID: itemID,
-			Quantity:   quantity,
+			MenuItemID: item.MenuID,
+			Quantity:   item.Count,
 		})
 		if err != nil {
 			return err
@@ -136,8 +140,8 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 	return tx.Commit(ctx)
 }
 
-func (s *Service) GetOrder(ctx context.Context, id int32) ([]repository.GetOrderWithItemsRow, error) {
-	return s.q.GetOrderWithItems(ctx, id)
+func (s *Service) GetOrder(ctx context.Context, id int32) (repository.GetOrderRow, error) {
+	return s.q.GetOrder(ctx, id)
 }
 
 func (s *Service) GetOrderItems(ctx context.Context, id int32) ([]repository.GetOrderItemsRow, error) {

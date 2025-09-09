@@ -3,6 +3,7 @@ package menu
 import (
 	"net/http"
 	"path/filepath"
+	"restaurant-server/internal/repository"
 	"restaurant-server/shared/types"
 	"restaurant-server/shared/utils"
 	"strconv"
@@ -46,12 +47,30 @@ func (h *Handler) CreateMenu(c *gin.Context) {
 }
 
 func (h *Handler) ListAllMenu(c *gin.Context) {
-	menu, err := h.service.ListAllMenu(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	ra, _ := c.Get("user_role")
+	role, _ := ra.(string)
+
+	if role == "kitchen" {
+		menu, err := h.service.ListAllMenu(c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if menu == nil {
+			menu = []repository.MenuItem{}
+		}
+		c.JSON(http.StatusOK, menu)
+	} else {
+		menu, err := h.service.ListActiveMenu(c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if menu == nil {
+			menu = []repository.MenuItem{}
+		}
+		c.JSON(http.StatusOK, menu)
 	}
-	c.JSON(http.StatusOK, menu)
 }
 
 func (h *Handler) GetMenuByID(c *gin.Context) {
@@ -62,9 +81,17 @@ func (h *Handler) GetMenuByID(c *gin.Context) {
 		return
 	}
 
+	ra, _ := c.Get("user_role")
+	role, _ := ra.(string)
+
 	menu, err := h.service.GetMenuByID(c, int32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "kitchen" && menu.Status != true {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not allowed"})
 		return
 	}
 	c.JSON(http.StatusOK, menu)

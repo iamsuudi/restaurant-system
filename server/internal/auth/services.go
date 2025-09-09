@@ -34,7 +34,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*re
 
 	user, err := qtx.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, errors.New("invalid email")
+		return nil, errors.New("Invalid email")
 	}
 
 	account, err := qtx.GetAccount(ctx, user.ID)
@@ -43,7 +43,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*re
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(account.PasswordHash), []byte(password)); err != nil {
-		return nil, errors.New("invalid password")
+		return nil, errors.New("Invalid credentials")
 	}
 
 	return &user, tx.Commit(ctx)

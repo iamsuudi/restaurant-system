@@ -9,6 +9,9 @@ SELECT * FROM menu_item WHERE id = $1;
 -- name: ListMenuItems :many
 SELECT * FROM menu_item ORDER BY created_at DESC;
 
+-- name: ListActiveMenuItems :many
+SELECT * FROM menu_item WHERE status = TRUE ORDER BY created_at DESC;
+
 -- name: UpdateMenuItem :one
 UPDATE menu_item
 SET

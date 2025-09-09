@@ -1,14 +1,15 @@
 -- name: CreateOrder :one
-INSERT INTO "order" (waiter_id, status, table_number, note)
-VALUES ($1, $2, $3, $4)
+INSERT INTO "order" (waiter_id, status, table_number, total_price, note)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: UpdateOrder :one
 UPDATE "order"
 SET
     note = COALESCE(sqlc.narg('note'), note),
-    waiter_id = COALESCE(sqlc.narg('waiter_id'), waiter_id),
     status = COALESCE(sqlc.narg('status'), status),
+    waiter_id = COALESCE(sqlc.narg('waiter_id'), waiter_id),
+    total_price = COALESCE(sqlc.narg('total_price'), total_price),
     table_number = COALESCE(sqlc.narg('table_number'), table_number),
     updated_at = NOW()
 WHERE id = $1
@@ -57,42 +58,9 @@ RETURNING *;
 -- name: DeleteOrderItem :exec
 DELETE FROM order_item WHERE id = $1;
 
--- name: GetOrderWithItems :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
-FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
-LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.id = $1
-ORDER BY oi.created_at ASC;
-
 -- name: ListOrders :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
+SELECT o.*, u.name AS waiter_name
 FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
 LEFT JOIN "user" u ON o.waiter_id = u.id
 WHERE o.status != 'Delivered'
 ORDER BY o.created_at ASC
@@ -104,21 +72,8 @@ FROM "order"
 WHERE "order".status != 'Delivered';
 
 -- name: ListCompletedOrders :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
+SELECT o.*, u.name AS waiter_name
 FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
 LEFT JOIN "user" u ON o.waiter_id = u.id
 WHERE o.status = 'Delivered'
 ORDER BY o.delivered_at DESC

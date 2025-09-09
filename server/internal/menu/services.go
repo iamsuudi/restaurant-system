@@ -33,6 +33,10 @@ func (s *Service) ListAllMenu(ctx context.Context) ([]repository.MenuItem, error
 	return s.q.ListMenuItems(ctx)
 }
 
+func (s *Service) ListActiveMenu(ctx context.Context) ([]repository.MenuItem, error) {
+	return s.q.ListActiveMenuItems(ctx)
+}
+
 func (s *Service) GetMenuByID(ctx context.Context, id int32) (repository.MenuItem, error) {
 	return s.q.GetMenuItem(ctx, id)
 }
