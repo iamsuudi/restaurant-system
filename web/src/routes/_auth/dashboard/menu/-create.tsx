@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input'
 const schema = z.object({
   name: z
     .string({ message: 'Name is required' })
-    .min(5, 'Minimum 5 letters are required'),
+    .min(2, 'Minimum 2 letters are required'),
   price: z
     .number({ message: 'Price is required' })
     .min(0, 'Price must be above 0'),

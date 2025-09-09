@@ -1,8 +1,19 @@
-import { useState } from 'react'
-import { Minus, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  Cake,
+  Cherry,
+  CupSoda,
+  Hamburger,
+  Loader,
+  Minus,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import _ from 'lodash'
+import { toast } from 'sonner'
 import { EditDialog } from './menu/-edit'
 import type { Menu } from '@/types/menu'
+import type { ItemType } from '@/types/order'
 import {
   Table,
   TableBody,
@@ -23,6 +34,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
+import { query } from '@/hooks/query'
 
 export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
   return (
@@ -52,7 +66,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
               <TableCell className="font-medium">
                 <EditDialog id={menu.id}>
                   <p className="hover:cursor-pointer hover:underline">
-                    {menu.name}r
+                    {menu.name}
                   </p>
                 </EditDialog>
               </TableCell>
@@ -78,19 +92,25 @@ interface Order {
 export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
   const [selectedMenu, setSelectedMenu] = useState<Array<Order>>([])
   const [note, setNote] = useState('')
+  const [tableNumber, setTableNumber] = useState('')
   const [display, setDisplay] = useState(false)
 
   return (
-    <div className="w-full flex flex-col gap-10 md:flex-row">
-      <Tabs defaultValue="appetizer" className="flex-1">
-        <TabsList className="w-full">
-          <TabsTrigger value="appetizer">Appetizers</TabsTrigger>
-          <TabsTrigger value="main">Main Courses</TabsTrigger>
-          <TabsTrigger value="dessert">Desserts</TabsTrigger>
-          <TabsTrigger value="drink">Drinks</TabsTrigger>
-        </TabsList>
+    <div className="w-full flex flex-col gap-10 lg:flex-row justify-center align-center">
+      <Tabs defaultValue="appetizer" className="flex-1 overflow-clip">
+        <div className="w-full overflow-x-scroll">
+          <TabsList className="w-full min-w-sm">
+            <TabsTrigger value="appetizer">Appetizers</TabsTrigger>
+            <TabsTrigger value="main">Main Courses</TabsTrigger>
+            <TabsTrigger value="dessert">Desserts</TabsTrigger>
+            <TabsTrigger value="drink">Drinks</TabsTrigger>
+          </TabsList>
+        </div>
         {['appetizer', 'main', 'dessert', 'drink'].map((tab) => (
-          <TabsContent value={tab} className="py-5">
+          <TabsContent
+            value={tab}
+            className="py-5 flex flex-wrap justify-center sm:justify-start gap-10 min-h-80"
+          >
             {data
               ?.filter((menu) => menu.category === tab)
               .map((menu) => (
@@ -106,14 +126,17 @@ export const WaiterMenuTable = ({ data }: { data?: Array<Menu> }) => {
         ))}
       </Tabs>
 
-      <OrderBox
-        display={display}
-        setDisplay={setDisplay}
-        selectedMenu={selectedMenu}
-        setSelectedMenu={setSelectedMenu}
-        note={note}
-        setNote={setNote}
-      />
+      {display && (
+        <OrderBox
+          setDisplay={setDisplay}
+          selectedMenu={selectedMenu}
+          setSelectedMenu={setSelectedMenu}
+          note={note}
+          setNote={setNote}
+          tableNumber={tableNumber}
+          setTableNumber={setTableNumber}
+        />
+      )}
     </div>
   )
 }
@@ -164,34 +187,68 @@ function MenuBox({
 }
 
 function OrderBox({
-  display,
   setDisplay,
   selectedMenu,
   setSelectedMenu,
   note,
   setNote,
+  tableNumber,
+  setTableNumber,
 }: {
-  display: boolean
   setDisplay: React.Dispatch<React.SetStateAction<boolean>>
   selectedMenu: Array<Order>
   setSelectedMenu: React.Dispatch<React.SetStateAction<Array<Order>>>
   note: string
   setNote: React.Dispatch<React.SetStateAction<string>>
+  tableNumber: string
+  setTableNumber: React.Dispatch<React.SetStateAction<string>>
 }) {
-  if (!display) return null
+  const { mutate, isPending, isSuccess, error } = query.createOrder()
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success('Successful!')
+      setSelectedMenu([])
+      setNote('')
+      setTableNumber('')
+    } else if (error) {
+      toast.error('Failed: ' + error.message)
+    }
+  }, [isSuccess, error])
+
   return (
-    <div className="flex-1 flex flex-col gap-6 p-4 shadow-xl rounded-2xl max-w-sm">
-      <p className="font-bold text-2xl">Order Summary</p>
-      <div>
-        {selectedMenu.map((order) => (
-          <div key={order.menu.id} className="flex justify-between">
-            <div className="flex flex-col gap-2">
-              <p className="font-medium">
-                {order.menu.name} x {order.count}
+    <div className="flex-1 flex flex-col gap-4 p-4 shadow border rounded-2xl w-80 max-w-80">
+      <p className="font-bold text-2xl underline underline-offset-6">
+        Order Summary
+      </p>
+      <div className="">
+        {selectedMenu.map((order, index) => (
+          <div
+            key={order.menu.id}
+            className={cn('flex justify-between py-2', {
+              'border-t border-t-secondary': index > 0,
+            })}
+          >
+            <div className="flex flex-col gap-1">
+              <p className="font-medium text-md">
+                {order.menu.category === 'drink' && (
+                  <CupSoda className="size-4 inline mr-2 mb-1" />
+                )}
+                {order.menu.category === 'dessert' && (
+                  <Cake className="size-4 inline mr-2 mb-1" />
+                )}
+                {order.menu.category === 'main' && (
+                  <Hamburger className="size-4 inline mr-2 mb-1" />
+                )}
+                {order.menu.category === 'appetizer' && (
+                  <Cherry className="size-4 inline mr-2 mb-1" />
+                )}
+                {order.menu.name}{' '}
+                <span className="text-primary">x {order.count}</span>
               </p>
-              <div className="flex items-center text-sm gap-2">
+              <div className="flex items-center text-sm gap-1 pl-7">
                 <button
-                  className="size-6 flex items-center justify-center rounded-full border hover:scale-110"
+                  className="size-5 flex items-center justify-center rounded-full border hover:scale-110 bg-secondary"
                   onClick={() => {
                     if (order.count === 1) {
                       setSelectedMenu(
@@ -212,11 +269,11 @@ function OrderBox({
                 >
                   <Minus className="size-4 text-destructive" />
                 </button>
-                <button className="size-6 flex justify-center items-center">
+                <button className="size-6 flex justify-center items-centeri text-gray-500">
                   {order.count}
                 </button>
                 <button
-                  className="size-6 flex items-center justify-center rounded-full border hover:scale-110"
+                  className="size-5 flex items-center justify-center rounded-full border hover:scale-110 bg-secondary"
                   onClick={() => {
                     setSelectedMenu(
                       selectedMenu.map((item) =>
@@ -251,6 +308,13 @@ function OrderBox({
           </div>
         ))}
       </div>
+
+      <Input
+        value={tableNumber}
+        onChange={(e) => setTableNumber(e.target.value)}
+        placeholder="Table Number"
+        className="bg-secondary"
+      />
 
       <Textarea
         value={note}
@@ -293,7 +357,29 @@ function OrderBox({
           </span>
         </p>
       </div>
-      <Button>Submit Order</Button>
+      <Button
+        type="button"
+        disabled={isPending || tableNumber === ''}
+        onClick={() => {
+          let total_price = 0
+          const items: Array<ItemType> = []
+          selectedMenu.forEach((item) => {
+            total_price += item.menu.price * item.count
+            items.push({
+              menuID: item.menu.id,
+              quantity: item.count,
+            })
+          })
+
+          mutate({ table_number: tableNumber, total_price, items, note })
+        }}
+      >
+        {isPending ? (
+          <Loader className="size-5 animate-spin" />
+        ) : (
+          'Submit Order'
+        )}
+      </Button>
       <div className="flex gap-2">
         <Button
           variant="destructive"
