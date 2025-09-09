@@ -1,8 +1,8 @@
 package types
 
 type ItemsType []struct {
-	MenuID int32
-	Count  int32
+	MenuID   int32 `json:"menu_item_id"`
+	Quantity int32 `json:"quantity"`
 }
 
 type OrderPayload struct {

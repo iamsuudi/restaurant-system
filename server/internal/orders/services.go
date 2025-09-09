@@ -45,7 +45,7 @@ func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.O
 		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
 			OrderID:    order.ID,
 			MenuItemID: item.MenuID,
-			Quantity:   item.Count,
+			Quantity:   item.Quantity,
 		})
 		if err != nil {
 			return err
@@ -116,7 +116,7 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 		_, err = qtx.AddOrderItem(ctx, repository.AddOrderItemParams{
 			OrderID:    order.ID,
 			MenuItemID: item.MenuID,
-			Quantity:   item.Count,
+			Quantity:   item.Quantity,
 		})
 		if err != nil {
 			return err
