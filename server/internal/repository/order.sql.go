@@ -8,8 +8,6 @@ package repository
 import (
 	"context"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addOrderItem = `-- name: AddOrderItem :one
@@ -74,8 +72,8 @@ func (q *Queries) CountListOrders(ctx context.Context) (int64, error) {
 }
 
 const createOrder = `-- name: CreateOrder :one
-INSERT INTO "order" (waiter_id, status, table_number, note)
-VALUES ($1, $2, $3, $4)
+INSERT INTO "order" (waiter_id, status, table_number, total_price, note)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, waiter_id, status, table_number, note, total_price, created_at, delivered_at, updated_at
 `
 
@@ -83,6 +81,7 @@ type CreateOrderParams struct {
 	WaiterID    *int32  `db:"waiter_id" json:"waiter_id"`
 	Status      string  `db:"status" json:"status"`
 	TableNumber string  `db:"table_number" json:"table_number"`
+	TotalPrice  float32 `db:"total_price" json:"total_price"`
 	Note        *string `db:"note" json:"note"`
 }
 
@@ -91,6 +90,7 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		arg.WaiterID,
 		arg.Status,
 		arg.TableNumber,
+		arg.TotalPrice,
 		arg.Note,
 	)
 	var i Order
@@ -139,7 +139,7 @@ type GetOrderRow struct {
 	Status      string     `db:"status" json:"status"`
 	TableNumber string     `db:"table_number" json:"table_number"`
 	Note        *string    `db:"note" json:"note"`
-	TotalPrice  float64    `db:"total_price" json:"total_price"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
 	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
 	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
 	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
@@ -212,89 +212,9 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderI
 	return items, nil
 }
 
-const getOrderWithItems = `-- name: GetOrderWithItems :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
-FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
-LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.id = $1
-ORDER BY oi.created_at ASC
-`
-
-type GetOrderWithItemsRow struct {
-	OrderID        int32       `db:"order_id" json:"order_id"`
-	WaiterID       *int32      `db:"waiter_id" json:"waiter_id"`
-	WaiterName     *string     `db:"waiter_name" json:"waiter_name"`
-	Status         string      `db:"status" json:"status"`
-	TableNumber    string      `db:"table_number" json:"table_number"`
-	OrderCreatedAt time.Time   `db:"order_created_at" json:"order_created_at"`
-	OrderItemID    pgtype.Int4 `db:"order_item_id" json:"order_item_id"`
-	Quantity       *int32      `db:"quantity" json:"quantity"`
-	MenuItemID     pgtype.Int4 `db:"menu_item_id" json:"menu_item_id"`
-	MenuItemName   *string     `db:"menu_item_name" json:"menu_item_name"`
-	MenuItemPrice  *float64    `db:"menu_item_price" json:"menu_item_price"`
-}
-
-func (q *Queries) GetOrderWithItems(ctx context.Context, id int32) ([]GetOrderWithItemsRow, error) {
-	rows, err := q.db.Query(ctx, getOrderWithItems, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetOrderWithItemsRow{}
-	for rows.Next() {
-		var i GetOrderWithItemsRow
-		if err := rows.Scan(
-			&i.OrderID,
-			&i.WaiterID,
-			&i.WaiterName,
-			&i.Status,
-			&i.TableNumber,
-			&i.OrderCreatedAt,
-			&i.OrderItemID,
-			&i.Quantity,
-			&i.MenuItemID,
-			&i.MenuItemName,
-			&i.MenuItemPrice,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listCompletedOrders = `-- name: ListCompletedOrders :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
 LEFT JOIN "user" u ON o.waiter_id = u.id
 WHERE o.status = 'Delivered'
 ORDER BY o.delivered_at DESC
@@ -307,17 +227,16 @@ type ListCompletedOrdersParams struct {
 }
 
 type ListCompletedOrdersRow struct {
-	OrderID        int32       `db:"order_id" json:"order_id"`
-	WaiterID       *int32      `db:"waiter_id" json:"waiter_id"`
-	WaiterName     *string     `db:"waiter_name" json:"waiter_name"`
-	Status         string      `db:"status" json:"status"`
-	TableNumber    string      `db:"table_number" json:"table_number"`
-	OrderCreatedAt time.Time   `db:"order_created_at" json:"order_created_at"`
-	OrderItemID    pgtype.Int4 `db:"order_item_id" json:"order_item_id"`
-	Quantity       *int32      `db:"quantity" json:"quantity"`
-	MenuItemID     pgtype.Int4 `db:"menu_item_id" json:"menu_item_id"`
-	MenuItemName   *string     `db:"menu_item_name" json:"menu_item_name"`
-	MenuItemPrice  *float64    `db:"menu_item_price" json:"menu_item_price"`
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
 }
 
 func (q *Queries) ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error) {
@@ -330,17 +249,16 @@ func (q *Queries) ListCompletedOrders(ctx context.Context, arg ListCompletedOrde
 	for rows.Next() {
 		var i ListCompletedOrdersRow
 		if err := rows.Scan(
-			&i.OrderID,
+			&i.ID,
 			&i.WaiterID,
-			&i.WaiterName,
 			&i.Status,
 			&i.TableNumber,
-			&i.OrderCreatedAt,
-			&i.OrderItemID,
-			&i.Quantity,
-			&i.MenuItemID,
-			&i.MenuItemName,
-			&i.MenuItemPrice,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+			&i.WaiterName,
 		); err != nil {
 			return nil, err
 		}
@@ -353,21 +271,8 @@ func (q *Queries) ListCompletedOrders(ctx context.Context, arg ListCompletedOrde
 }
 
 const listOrders = `-- name: ListOrders :many
-SELECT
-    o.id AS order_id,
-    o.waiter_id,
-    u.name AS waiter_name,
-    o.status,
-    o.table_number,
-    o.created_at AS order_created_at,
-    oi.id AS order_item_id,
-    oi.quantity,
-    mi.id AS menu_item_id,
-    mi.name AS menu_item_name,
-    mi.price AS menu_item_price
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
-LEFT JOIN order_item oi ON o.id = oi.order_id
-LEFT JOIN menu_item mi ON oi.menu_item_id = mi.id
 LEFT JOIN "user" u ON o.waiter_id = u.id
 WHERE o.status != 'Delivered'
 ORDER BY o.created_at ASC
@@ -380,17 +285,16 @@ type ListOrdersParams struct {
 }
 
 type ListOrdersRow struct {
-	OrderID        int32       `db:"order_id" json:"order_id"`
-	WaiterID       *int32      `db:"waiter_id" json:"waiter_id"`
-	WaiterName     *string     `db:"waiter_name" json:"waiter_name"`
-	Status         string      `db:"status" json:"status"`
-	TableNumber    string      `db:"table_number" json:"table_number"`
-	OrderCreatedAt time.Time   `db:"order_created_at" json:"order_created_at"`
-	OrderItemID    pgtype.Int4 `db:"order_item_id" json:"order_item_id"`
-	Quantity       *int32      `db:"quantity" json:"quantity"`
-	MenuItemID     pgtype.Int4 `db:"menu_item_id" json:"menu_item_id"`
-	MenuItemName   *string     `db:"menu_item_name" json:"menu_item_name"`
-	MenuItemPrice  *float64    `db:"menu_item_price" json:"menu_item_price"`
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
 }
 
 func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error) {
@@ -403,17 +307,16 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListO
 	for rows.Next() {
 		var i ListOrdersRow
 		if err := rows.Scan(
-			&i.OrderID,
+			&i.ID,
 			&i.WaiterID,
-			&i.WaiterName,
 			&i.Status,
 			&i.TableNumber,
-			&i.OrderCreatedAt,
-			&i.OrderItemID,
-			&i.Quantity,
-			&i.MenuItemID,
-			&i.MenuItemName,
-			&i.MenuItemPrice,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+			&i.WaiterName,
 		); err != nil {
 			return nil, err
 		}
@@ -429,28 +332,31 @@ const updateOrder = `-- name: UpdateOrder :one
 UPDATE "order"
 SET
     note = COALESCE($2, note),
-    waiter_id = COALESCE($3, waiter_id),
-    status = COALESCE($4, status),
-    table_number = COALESCE($5, table_number),
+    status = COALESCE($3, status),
+    waiter_id = COALESCE($4, waiter_id),
+    total_price = COALESCE($5, total_price),
+    table_number = COALESCE($6, table_number),
     updated_at = NOW()
 WHERE id = $1
 RETURNING id, waiter_id, status, table_number, note, total_price, created_at, delivered_at, updated_at
 `
 
 type UpdateOrderParams struct {
-	ID          int32   `db:"id" json:"id"`
-	Note        *string `db:"note" json:"note"`
-	WaiterID    *int32  `db:"waiter_id" json:"waiter_id"`
-	Status      *string `db:"status" json:"status"`
-	TableNumber *string `db:"table_number" json:"table_number"`
+	ID          int32    `db:"id" json:"id"`
+	Note        *string  `db:"note" json:"note"`
+	Status      *string  `db:"status" json:"status"`
+	WaiterID    *int32   `db:"waiter_id" json:"waiter_id"`
+	TotalPrice  *float32 `db:"total_price" json:"total_price"`
+	TableNumber *string  `db:"table_number" json:"table_number"`
 }
 
 func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order, error) {
 	row := q.db.QueryRow(ctx, updateOrder,
 		arg.ID,
 		arg.Note,
-		arg.WaiterID,
 		arg.Status,
+		arg.WaiterID,
+		arg.TotalPrice,
 		arg.TableNumber,
 	)
 	var i Order

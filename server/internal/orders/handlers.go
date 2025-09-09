@@ -23,7 +23,7 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 	actorID, _ := raw.(int32)
 
 	var input types.OrderPayload
-	if err := c.ShouldBind(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -98,7 +98,7 @@ func (h *Handler) UpdateOrder(c *gin.Context) {
 	}
 
 	var input types.OrderEditPayload
-	if err := c.ShouldBind(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

@@ -29,7 +29,6 @@ type Querier interface {
 	GetMenuItem(ctx context.Context, id int32) (MenuItem, error)
 	GetOrder(ctx context.Context, id int32) (GetOrderRow, error)
 	GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderItemsRow, error)
-	GetOrderWithItems(ctx context.Context, id int32) ([]GetOrderWithItemsRow, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshTokens, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id int32) (User, error)

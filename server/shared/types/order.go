@@ -1,14 +1,21 @@
 package types
 
+type ItemsType []struct {
+	MenuID int32
+	Count  int32
+}
+
 type OrderPayload struct {
-	Table string          `form:"table"`
-	Items map[int32]int32 `form:"items" binding:"required"`
-	Total float64         `form:"total" binding:"required"`
+	TableNumber string    `json:"table_number"`
+	Items       ItemsType `json:"items" binding:"required"`
+	Total       float32   `json:"total_price" binding:"required"`
+	Note        *string   `json:"note"`
 }
 
 type OrderEditPayload struct {
-	ID    int32            `form:"id" binding:"required"`
-	Table *string          `form:"table"`
-	Items *map[int32]int32 `form:"items"`
-	Total *float64         `form:"total"`
+	ID          int32      `json:"id" binding:"required"`
+	TableNumber *string    `json:"table_number"`
+	Items       *ItemsType `json:"items"`
+	Total       *float32   `json:"total_price"`
+	Note        *string    `json:"note"`
 }
