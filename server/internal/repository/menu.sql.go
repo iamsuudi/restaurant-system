@@ -82,6 +82,41 @@ func (q *Queries) GetMenuItem(ctx context.Context, id int32) (MenuItem, error) {
 	return i, err
 }
 
+const listActiveMenuItems = `-- name: ListActiveMenuItems :many
+SELECT id, name, description, price, picture, category, status, ingredients, created_at, updated_at FROM menu_item WHERE status = TRUE ORDER BY created_at DESC
+`
+
+func (q *Queries) ListActiveMenuItems(ctx context.Context) ([]MenuItem, error) {
+	rows, err := q.db.Query(ctx, listActiveMenuItems)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MenuItem{}
+	for rows.Next() {
+		var i MenuItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.Picture,
+			&i.Category,
+			&i.Status,
+			&i.Ingredients,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMenuItems = `-- name: ListMenuItems :many
 SELECT id, name, description, price, picture, category, status, ingredients, created_at, updated_at FROM menu_item ORDER BY created_at DESC
 `

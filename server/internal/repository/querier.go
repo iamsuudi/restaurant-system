@@ -35,6 +35,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int32) (User, error)
 	GetUserRole(ctx context.Context, id int32) (string, error)
 	GetValidPasswordResetToken(ctx context.Context, token string) (PasswordResetTokens, error)
+	ListActiveMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error)
 	ListMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error)
