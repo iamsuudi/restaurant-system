@@ -17,14 +17,14 @@ export const user = {
     })
   },
 
-  userQuery(id: string) {
+  userQuery(id: number) {
     return useQuery({
       queryKey: queryKeys.user(id),
       queryFn: () => api.getUser(id),
     })
   },
 
-  updateUserInfoMutation(id: string, profile?: boolean) {
+  updateUserInfoMutation(id: number, profile?: boolean) {
     return useMutation({
       mutationFn: (info: {
         first: string
@@ -43,7 +43,7 @@ export const user = {
             queryKey: queryKeys.user(id),
           })
           await queryClient.invalidateQueries({
-            queryKey: queryKeys.logs(1, 10).concat('user', id),
+            queryKey: queryKeys.logs(1, 10),
           })
         }
       },
