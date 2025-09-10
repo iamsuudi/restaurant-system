@@ -40,7 +40,7 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 
 func (h *Handler) ListOrders(c *gin.Context) {
 	limit, offset, _ := utils.PaginationHelper(c)
-	fmt.Println(limit, offset)
+
 	count, orders, err := h.service.ListOrders(c, limit, offset)
 	if err != nil {
 		fmt.Println(err.Error())

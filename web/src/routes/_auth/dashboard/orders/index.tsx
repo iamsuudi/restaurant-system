@@ -19,7 +19,7 @@ function RouteComponent() {
 
   return (
     <div className="px-5 py-16">
-      <div className="max-w-screen-xl w-full mx-auto space-y-16">
+      <div className="max-w-screen-md w-full mx-auto space-y-16">
         <div className="flex justify-between">
           <h1 className="font-black text-2xl">
             {user?.role == 'kitchen'

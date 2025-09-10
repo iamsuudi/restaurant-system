@@ -18,6 +18,8 @@ export const queryKeys = {
   ],
   menu: (id: number) => ['query', 'menu', 'one', { id }],
   allmenu: () => ['query', 'menu'],
+  user: (id: number) => ['query', 'users', 'one', { id }],
+  users: () => ['query', 'users'],
   log: (id: string) => ['query', 'logs', 'one', { id }],
   logs: (page: number, rows: number) => ['query', 'logs', { page }, { rows }],
   analytics: (target: string) => ['query', 'analytics', { target }],

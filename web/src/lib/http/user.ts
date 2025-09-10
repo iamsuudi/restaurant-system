@@ -12,12 +12,12 @@ export const user = {
     const data = await apiFetch(`/api/users`)
     return data as Array<User>
   },
-  async getUser(id: string) {
+  async getUser(id: number) {
     const data = await apiFetch(`/api/users/${id}`)
     return data as User
   },
   async updateUserInfo(
-    id: string,
+    id: number,
     info: {
       first: string
       second: string

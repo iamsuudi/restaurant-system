@@ -50,7 +50,7 @@ export const StatusRender = ({
         (role != 'kitchen' && status !== 'Ready')
       }
       className={cn(
-        'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
+        'flex items-center gap-2 py-1 pl-4 pr-5 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
         {
           'bg-gray-100': status == 'Pending',
           'bg-yellow-100': status == 'Processing',
@@ -68,7 +68,7 @@ export const StatusRender = ({
         })}
       />
       <span
-        className={cn('mt-1', {
+        className={cn('mt-0', {
           'text-gray-500': status == 'Pending',
           'text-yellow-500': status == 'Processing',
           'text-sky-500': status == 'Ready',

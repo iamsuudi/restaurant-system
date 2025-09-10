@@ -46,6 +46,8 @@ func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.O
 			OrderID:    order.ID,
 			MenuItemID: item.MenuID,
 			Quantity:   item.Quantity,
+			Price:      item.Price,
+			Category:   item.Category,
 		})
 		if err != nil {
 			return err
@@ -103,7 +105,7 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 		return err
 	}
 
-	// 2. Update Order-Items
+	// 3. Update Order-Items
 	err = qtx.ClearOrderItems(ctx, order.ID)
 	if err != nil {
 		return err
@@ -117,13 +119,15 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 			OrderID:    order.ID,
 			MenuItemID: item.MenuID,
 			Quantity:   item.Quantity,
+			Price:      item.Price,
+			Category:   item.Category,
 		})
 		if err != nil {
 			return err
 		}
 	}
 
-	// 3. Insert audit log
+	// 4. Insert audit log
 	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
 	// 	ActorID:          actorID,
 	// 	TargetResidentID: &resident.ID,

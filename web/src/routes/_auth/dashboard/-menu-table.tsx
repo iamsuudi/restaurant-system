@@ -160,12 +160,21 @@ function MenuBox({
         src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
         onClick={() => {
           if (!selectedMenu.some((item) => item.menu.id === menu.id)) {
-            setSelectedMenu([...selectedMenu, { menu, count: 1 }])
+            setSelectedMenu([
+              ...selectedMenu,
+              {
+                menu,
+                count: 1,
+              },
+            ])
           } else {
             setSelectedMenu(
               selectedMenu.map((item) =>
                 item.menu.id === menu.id
-                  ? { ...item, count: item.count + 1 }
+                  ? {
+                      ...item,
+                      count: item.count + 1,
+                    }
                   : item,
               ),
             )
@@ -260,7 +269,10 @@ function OrderBox({
                       setSelectedMenu(
                         selectedMenu.map((item) =>
                           item.menu.id == order.menu.id
-                            ? { ...item, count: item.count - 1 }
+                            ? {
+                                ...item,
+                                count: item.count - 1,
+                              }
                             : item,
                         ),
                       )
@@ -368,9 +380,10 @@ function OrderBox({
             items.push({
               menu_item_id: item.menu.id,
               quantity: item.count,
+              price: item.menu.price,
+              category: item.menu.category,
             })
           })
-          console.log(items)
 
           mutate({ table_number: tableNumber, total_price, items, note })
         }}
