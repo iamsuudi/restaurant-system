@@ -51,16 +51,18 @@ export const OrdersTable = ({
             return (
               <TableRow key={order.id}>
                 <TableCell className="text-center">
-                  <button
-                    onClick={() => {
-                      router.navigate({
-                        to: '/dashboard/orders/$id',
-                        params: { id: order.id.toString() },
-                      })
-                    }}
-                  >
-                    <ClipboardEditIcon className="size-4 hover:text-sky-500 hover:scale-120 focus:scale-110" />
-                  </button>
+                  {me?.role === 'waiter' && (
+                    <button
+                      onClick={() => {
+                        router.navigate({
+                          to: '/dashboard/orders/$id',
+                          params: { id: order.id.toString() },
+                        })
+                      }}
+                    >
+                      <ClipboardEditIcon className="size-4 hover:text-sky-500 hover:scale-120 focus:scale-110" />
+                    </button>
+                  )}
                 </TableCell>
                 {me?.role === 'waiter' && (
                   <TableCell className="text-center font-bold text-md">

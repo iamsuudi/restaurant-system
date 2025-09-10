@@ -76,9 +76,7 @@ export function CreateDialog() {
     <Dialog>
       <form>
         <DialogTrigger asChild>
-          <Button variant="outline" className="shadow-md">
-            Create Menu
-          </Button>
+          <Button className="">Create Menu</Button>
         </DialogTrigger>
         <DialogContent className="max-w-md max-h-3/4 overflow-y-scroll">
           <DialogHeader>

@@ -20,28 +20,24 @@ function RouteComponent() {
   return (
     <div className="px-5 py-16">
       <div className="max-w-screen-md w-full mx-auto space-y-16">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <h1 className="font-black text-2xl">
             {user?.role == 'kitchen'
               ? 'Kitchen Orders Management'
               : 'Active Orders'}
           </h1>
-          {user?.role == 'waiter' && (
-            <div className="flex items-center gap-4">
-              <Button
-                variant={'outline'}
-                size={'icon'}
-                onClick={() => refetch()}
-              >
-                <RotateCcw className={cn({ 'animate-spin': isRefetching })} />
-              </Button>
-              <Button
-                onClick={() => router.navigate({ to: '/dashboard/menu' })}
-              >
-                Create Order
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <Button variant={'outline'} size={'icon'} onClick={() => refetch()}>
+              <RotateCcw className={cn({ 'animate-spin': isRefetching })} />
+            </Button>
+            <Button onClick={() => router.navigate({ to: '/dashboard/menu' })}>
+              {user?.role == 'waiter'
+                ? 'Create Order'
+                : user?.role == 'kitchen'
+                  ? 'Create Menu'
+                  : 'View Menu'}
+            </Button>
+          </div>
         </div>
         <div className="shadow-none mx-auto space-y-5">
           {data?.count == 0 ? (
