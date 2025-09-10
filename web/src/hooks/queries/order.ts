@@ -9,20 +9,20 @@ export const order = {
     return useMutation({
       mutationFn: (data: OrderPayload) => api.createOrder(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
       },
     })
   },
-  listOrders() {
+  listOrders(page = 1, limit = 10) {
     return useQuery({
-      queryKey: queryKeys.orders(),
-      queryFn: () => api.listOrders(),
+      queryKey: queryKeys.orders(page, limit),
+      queryFn: () => api.listOrders(page, limit),
     })
   },
-  listCompletedOrders() {
+  listCompletedOrders(page = 1, limit = 10) {
     return useQuery({
-      queryKey: queryKeys.completedOrders(),
-      queryFn: () => api.listCompletedOrders(),
+      queryKey: queryKeys.completedOrders(page, limit),
+      queryFn: () => api.listCompletedOrders(page, limit),
     })
   },
   getOrder(id: number) {
@@ -31,11 +31,26 @@ export const order = {
       queryFn: () => api.getOrder(id),
     })
   },
+  getOrderItems(id: number) {
+    return useQuery({
+      queryKey: queryKeys.orderItems(id),
+      queryFn: () => api.getOrderItems(id),
+    })
+  },
   updateOrder(id: number) {
     return useMutation({
       mutationFn: (data: OrderPayload) => api.updateOrder(id, data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
+      },
+    })
+  },
+  updateOrderStatus(id: number) {
+    return useMutation({
+      mutationFn: (status: string) => api.updateOrderStatus(id, status),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
         queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
       },
     })
@@ -44,7 +59,7 @@ export const order = {
     return useMutation({
       mutationFn: () => api.deleteOrder(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
         queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
       },
     })

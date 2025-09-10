@@ -366,10 +366,11 @@ function OrderBox({
           selectedMenu.forEach((item) => {
             total_price += item.menu.price * item.count
             items.push({
-              menuID: item.menu.id,
+              menu_item_id: item.menu.id,
               quantity: item.count,
             })
           })
+          console.log(items)
 
           mutate({ table_number: tableNumber, total_price, items, note })
         }}

@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"fmt"
 	"net/http"
 	"restaurant-server/internal/repository"
 	"restaurant-server/shared/types"
@@ -39,9 +40,10 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 
 func (h *Handler) ListOrders(c *gin.Context) {
 	limit, offset, _ := utils.PaginationHelper(c)
-
+	fmt.Println(limit, offset)
 	count, orders, err := h.service.ListOrders(c, limit, offset)
 	if err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 		return
 	}
@@ -115,6 +117,34 @@ func (h *Handler) UpdateOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Order updated"})
 }
 
+func (h *Handler) UpdateOrderStatus(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.UpdateOrderStatus(c, &actorID, int32(id), input.Status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Order status updated"})
+}
+
 func (h *Handler) DeleteOrder(c *gin.Context) {
 	raw := c.Param("id")
 	id, err := strconv.Atoi(raw)
@@ -129,4 +159,21 @@ func (h *Handler) DeleteOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Order deleted"})
+}
+
+func (h *Handler) GetOrderItems(c *gin.Context) {
+	raw := c.Param("id")
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	items, err := h.service.GetOrderItems(c, int32(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, items)
 }
