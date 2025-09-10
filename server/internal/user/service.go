@@ -42,7 +42,7 @@ func (s *Service) UpdateUserInfo(ctx context.Context, id int32, input types.User
 	_, err = qtx.UpdateUserInfo(ctx, repository.UpdateUserInfoParams{
 		ID:      id,
 		Name:    &input.Name,
-		Role:    &input.Role,
+		Role:    input.Role,
 		Email:   &input.Email,
 		Phone:   &input.Phone,
 		Picture: picture,

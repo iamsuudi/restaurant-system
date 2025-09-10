@@ -75,7 +75,7 @@ func (h *Handler) UpdateUserInfo(c *gin.Context) {
 	if pic, err := c.FormFile("picture"); err == nil {
 		filename := utils.MakeFileName(pic.Filename)
 		if err := c.SaveUploadedFile(pic, filepath.Join("uploads", filename)); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reference image"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save picture"})
 			return
 		}
 		picture = &filename
@@ -83,8 +83,7 @@ func (h *Handler) UpdateUserInfo(c *gin.Context) {
 
 	err = h.service.UpdateUserInfo(c, int32(targetId), input, picture)
 	if err != nil {
-		fmt.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user info"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

@@ -73,7 +73,7 @@ func (s *Service) RegisterUser(ctx context.Context, input types.UserPayload) err
 		Name:  input.Name,
 		Email: input.Email,
 		Phone: input.Phone,
-		Role:  input.Role,
+		Role:  *input.Role,
 	})
 	if err != nil {
 		return err

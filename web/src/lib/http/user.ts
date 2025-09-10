@@ -19,11 +19,9 @@ export const user = {
   async updateUserInfo(
     id: number,
     info: {
-      first: string
-      second: string
-      last: string
-      email: string
-      phone: string
+      name?: string
+      email?: string
+      phone?: string
     },
   ) {
     await apiFetch(`/api/users/${id}/info`, {
