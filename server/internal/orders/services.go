@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"restaurant-server/internal/repository"
 	"restaurant-server/shared/types"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
@@ -90,7 +90,7 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 
 	status := "Pending"
 
-	// 2. Create order
+	// 2. Edit order
 	_, err = qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
 		ID:          order.ID,
 		WaiterID:    actorID,
@@ -140,19 +140,58 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 	return tx.Commit(ctx)
 }
 
+func (s *Service) UpdateOrderStatus(ctx context.Context, actorID *int32, id int32, status string) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// 1. Get order
+	order, err := qtx.GetOrder(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if order.Status == "Delivered" {
+		return errors.New("Order is already delivered")
+	}
+
+	// 2. Edit order status
+	_, err = qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
+		ID:       order.ID,
+		WaiterID: actorID,
+		Status:   &status,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 3. Insert audit log
+	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+	// 	ActorID:          actorID,
+	// 	TargetResidentID: &resident.ID,
+	// 	ActionType:       "CREATE_RESIDENT",
+	// 	ObjectType:       "resident",
+	// 	Diff: map[string]any{
+	// 		"after": resident,
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
+
+	return tx.Commit(ctx)
+}
+
 func (s *Service) GetOrder(ctx context.Context, id int32) (repository.GetOrderRow, error) {
 	return s.q.GetOrder(ctx, id)
 }
 
 func (s *Service) GetOrderItems(ctx context.Context, id int32) ([]repository.GetOrderItemsRow, error) {
 	return s.q.GetOrderItems(ctx, id)
-}
-
-func (s *Service) UpdateOrderStatus(ctx context.Context, id int32, status string) (repository.Order, error) {
-	return s.q.UpdateOrderStatus(ctx, repository.UpdateOrderStatusParams{
-		ID:     id,
-		Status: status,
-	})
 }
 
 func (s *Service) ListOrders(ctx context.Context, limit, offset int) (int64, []repository.ListOrdersRow, error) {
