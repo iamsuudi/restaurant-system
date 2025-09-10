@@ -21,7 +21,6 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
   }
 
   if (!resp.ok) {
-    if (resp.status == 500) throw new Error(resp.statusText)
     if (resp.status == 404) throw new Error('Route Not Found!')
     const errorResponse = await resp.json()
     throw new Error(errorResponse.error || 'Unknown error')
