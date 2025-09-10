@@ -46,6 +46,8 @@ type OrderItem struct {
 	OrderID    int32     `db:"order_id" json:"order_id"`
 	MenuItemID int32     `db:"menu_item_id" json:"menu_item_id"`
 	Quantity   int32     `db:"quantity" json:"quantity"`
+	Price      float32   `db:"price" json:"price"`
+	Category   string    `db:"category" json:"category"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
 }

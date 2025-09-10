@@ -11,25 +11,35 @@ import (
 )
 
 const addOrderItem = `-- name: AddOrderItem :one
-INSERT INTO order_item (order_id, menu_item_id, quantity)
-VALUES ($1, $2, $3)
-RETURNING id, order_id, menu_item_id, quantity, created_at, updated_at
+INSERT INTO order_item (order_id, menu_item_id, quantity, price, category)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, order_id, menu_item_id, quantity, price, category, created_at, updated_at
 `
 
 type AddOrderItemParams struct {
-	OrderID    int32 `db:"order_id" json:"order_id"`
-	MenuItemID int32 `db:"menu_item_id" json:"menu_item_id"`
-	Quantity   int32 `db:"quantity" json:"quantity"`
+	OrderID    int32   `db:"order_id" json:"order_id"`
+	MenuItemID int32   `db:"menu_item_id" json:"menu_item_id"`
+	Quantity   int32   `db:"quantity" json:"quantity"`
+	Price      float32 `db:"price" json:"price"`
+	Category   string  `db:"category" json:"category"`
 }
 
 func (q *Queries) AddOrderItem(ctx context.Context, arg AddOrderItemParams) (OrderItem, error) {
-	row := q.db.QueryRow(ctx, addOrderItem, arg.OrderID, arg.MenuItemID, arg.Quantity)
+	row := q.db.QueryRow(ctx, addOrderItem,
+		arg.OrderID,
+		arg.MenuItemID,
+		arg.Quantity,
+		arg.Price,
+		arg.Category,
+	)
 	var i OrderItem
 	err := row.Scan(
 		&i.ID,
 		&i.OrderID,
 		&i.MenuItemID,
 		&i.Quantity,
+		&i.Price,
+		&i.Category,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -165,7 +175,7 @@ func (q *Queries) GetOrder(ctx context.Context, id int32) (GetOrderRow, error) {
 }
 
 const getOrderItems = `-- name: GetOrderItems :many
-SELECT oi.id, oi.order_id, oi.menu_item_id, oi.quantity, oi.created_at, oi.updated_at, mi.name, mi.price
+SELECT oi.id, oi.order_id, oi.menu_item_id, oi.quantity, oi.price, oi.category, oi.created_at, oi.updated_at, mi.name, mi.price
 FROM order_item oi
 JOIN menu_item mi ON oi.menu_item_id = mi.id
 WHERE oi.order_id = $1
@@ -177,10 +187,12 @@ type GetOrderItemsRow struct {
 	OrderID    int32     `db:"order_id" json:"order_id"`
 	MenuItemID int32     `db:"menu_item_id" json:"menu_item_id"`
 	Quantity   int32     `db:"quantity" json:"quantity"`
+	Price      float32   `db:"price" json:"price"`
+	Category   string    `db:"category" json:"category"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
 	Name       string    `db:"name" json:"name"`
-	Price      float64   `db:"price" json:"price"`
+	Price_2    float64   `db:"price_2" json:"price_2"`
 }
 
 func (q *Queries) GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderItemsRow, error) {
@@ -197,10 +209,12 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderI
 			&i.OrderID,
 			&i.MenuItemID,
 			&i.Quantity,
+			&i.Price,
+			&i.Category,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
-			&i.Price,
+			&i.Price_2,
 		); err != nil {
 			return nil, err
 		}
@@ -379,7 +393,7 @@ UPDATE order_item
 SET quantity = $2,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, order_id, menu_item_id, quantity, created_at, updated_at
+RETURNING id, order_id, menu_item_id, quantity, price, category, created_at, updated_at
 `
 
 type UpdateOrderItemQuantityParams struct {
@@ -395,6 +409,8 @@ func (q *Queries) UpdateOrderItemQuantity(ctx context.Context, arg UpdateOrderIt
 		&i.OrderID,
 		&i.MenuItemID,
 		&i.Quantity,
+		&i.Price,
+		&i.Category,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

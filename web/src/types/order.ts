@@ -14,6 +14,8 @@ export interface Order {
 export interface ItemType {
   menu_item_id: number
   quantity: number
+  price: number
+  category: string
 }
 
 export interface OrderPayload {
@@ -25,9 +27,10 @@ export interface OrderPayload {
 
 export interface OrderItem {
   id: number
-  order_id: number
-  menu_item_id: number
   name: string
-  quantity: number
   price: number
+  order_id: number
+  category: string
+  quantity: number
+  menu_item_id: number
 }

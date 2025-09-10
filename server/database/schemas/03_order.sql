@@ -15,6 +15,8 @@ CREATE TABLE order_item (
     order_id         INTEGER NOT NULL REFERENCES "order"(id) ON DELETE CASCADE,
     menu_item_id     INTEGER NOT NULL REFERENCES "menu_item"(id),
     quantity         INTEGER NOT NULL DEFAULT 1,
+    price            FLOAT NOT NULL,
+    category         VARCHAR(20) NOT NULL,
     created_at       TIMESTAMP(3) NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMP(3) NOT NULL DEFAULT NOW()
 );

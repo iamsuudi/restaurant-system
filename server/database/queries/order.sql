@@ -34,8 +34,8 @@ DELETE FROM "order" WHERE id = $1;
 
 
 -- name: AddOrderItem :one
-INSERT INTO order_item (order_id, menu_item_id, quantity)
-VALUES ($1, $2, $3)
+INSERT INTO order_item (order_id, menu_item_id, quantity, price, category)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: ClearOrderItems :exec

@@ -1,5 +1,6 @@
 import _ from 'lodash'
-import { format } from 'date-fns'
+import { ClipboardEditIcon } from 'lucide-react'
+import { useRouter } from '@tanstack/react-router'
 import type { Order } from '@/types/order'
 import {
   Table,
@@ -25,6 +26,7 @@ export const OrdersTable = ({
   page: number
   setPage: React.Dispatch<React.SetStateAction<number>>
 }) => {
+  const router = useRouter()
   const { data: me } = query.currentUserQuery()
 
   return (
@@ -32,36 +34,57 @@ export const OrdersTable = ({
       <Table className="text-sm rounded-2xl shadow">
         <TableHeader className="rounded-t-2xl">
           <TableRow className="bg-secondary">
-            <TableHead className="w-20 text-center">Table</TableHead>
-            <TableHead className="w-20">Time</TableHead>
-            <TableHead className="w-40">Items</TableHead>
-            <TableHead className="w-40">Note</TableHead>
-            <TableHead className="w-20 text-center">Status</TableHead>
+            <TableHead className="min-w-12"></TableHead>
+            {me?.role === 'waiter' && (
+              <TableHead className="min-w-12 text-center">Table</TableHead>
+            )}
+            {/* <TableHead className="min-w-20">Time</TableHead>*/}
+            <TableHead className="min-w-40">Items</TableHead>
+            {me?.role === 'kitchen' && (
+              <TableHead className="min-w-40">Note</TableHead>
+            )}
+            <TableHead className="min-w-20 text-center">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="min-h-80">
           {data?.orders.map((order) => {
             return (
               <TableRow key={order.id}>
-                <TableCell className="text-center font-bold text-md">
-                  {order.table_number}
+                <TableCell className="text-center">
+                  <button
+                    onClick={() => {
+                      router.navigate({
+                        to: '/dashboard/orders/$id',
+                        params: { id: order.id.toString() },
+                      })
+                    }}
+                  >
+                    <ClipboardEditIcon className="size-4 hover:text-sky-500 hover:scale-120 focus:scale-110" />
+                  </button>
                 </TableCell>
-                <TableCell className="font-medium">
+                {me?.role === 'waiter' && (
+                  <TableCell className="text-center font-bold text-md">
+                    {order.table_number}
+                  </TableCell>
+                )}
+                {/* <TableCell className="font-medium">
                   {format(order.created_at, 'hh:mm aaa')}
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="">
                   <OrderItems id={order.id} />
                 </TableCell>
-                <TableCell className="italic flex flex-wrap gap-1 overflow-clip min-w-40 text-gray-500">
-                  {order.note ? (
-                    order.note
-                      .split(' ')
-                      .map((w, index) => <span key={index + w}>{w}</span>)
-                  ) : (
-                    <span>No Note</span>
-                  )}
-                </TableCell>
-                <TableCell className="border">
+                {me?.role === 'kitchen' && (
+                  <TableCell className="italic flex flex-wrap gap-1 overflow-clip min-w-40 text-gray-500">
+                    {order.note ? (
+                      order.note
+                        .split(' ')
+                        .map((w, index) => <span key={index + w}>{w}</span>)
+                    ) : (
+                      <span>No Note</span>
+                    )}
+                  </TableCell>
+                )}
+                <TableCell className="">
                   <StatusRender
                     id={order.id}
                     role={me?.role}
