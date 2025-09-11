@@ -26,21 +26,26 @@ const schema = z.object({
     .string({ message: 'Phone is required' })
     .min(2, 'Minimum 2 letters are required'),
   role: z.enum(['admin', 'kitchen', 'waiter']),
-  password: z.string().optional(),
 })
 
 type FormType = z.infer<typeof schema>
 
-export function CreateDialog() {
-  const { mutate, isSuccess, error } = query.createUserMutation()
+export function EditDialog({
+  id,
+  children,
+}: {
+  id: number
+  children: React.ReactNode
+}) {
+  const { data: user } = query.userQuery(id)
+  const { mutate, isSuccess, error } = query.updateUserInfoMutation(id)
 
   const form = useAppForm({
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      role: 'waiter',
-      password: '',
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      role: user?.role || 'waiter',
     } as FormType,
     validators: {
       onChange: schema,
@@ -50,7 +55,6 @@ export function CreateDialog() {
       if (value.name) fd.append('name', value.name)
       if (value.email) fd.append('email', value.email)
       if (value.phone) fd.append('phone', value.phone)
-      if (value.password) fd.append('password', value.password)
       fd.append('role', value.role)
       mutate(fd)
     },
@@ -68,15 +72,13 @@ export function CreateDialog() {
   return (
     <Dialog>
       <form>
-        <DialogTrigger asChild>
-          <Button className="">Create User</Button>
-        </DialogTrigger>
+        <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="max-w-md space-y-5">
           <DialogHeader>
-            <DialogTitle>Create User</DialogTitle>
+            <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Write detail information about the user. Click save when
-              you&apos;re done.
+              Update information about the user. Click save when you&apos;re
+              done.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -118,12 +120,6 @@ export function CreateDialog() {
                   />
                 )}
               />
-              <form.AppField
-                name="password"
-                children={(field) => (
-                  <field.TextField label="Password" placeholder="********" />
-                )}
-              />
             </div>
 
             <DialogFooter className="flex">
@@ -132,7 +128,7 @@ export function CreateDialog() {
               </DialogClose>
               <div>
                 <form.AppForm>
-                  <form.SubscribeButton label="Create" />
+                  <form.SubscribeButton label="Update" />
                 </form.AppForm>
               </div>
             </DialogFooter>

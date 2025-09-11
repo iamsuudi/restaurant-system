@@ -7,6 +7,11 @@ export const user = {
   createUserMutation() {
     return useMutation({
       mutationFn: (data: FormData) => api.createUser(data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.users(),
+        })
+      },
     })
   },
 
@@ -27,16 +32,16 @@ export const user = {
   updateUserInfoMutation(id: number, profile?: boolean) {
     return useMutation({
       mutationFn: (payload: FormData) => api.updateUserInfo(id, payload),
-      onSuccess: async () => {
+      onSuccess: () => {
         if (profile) {
-          await queryClient.invalidateQueries({
+          queryClient.invalidateQueries({
             queryKey: queryKeys.me(),
           })
         } else {
-          await queryClient.invalidateQueries({
+          queryClient.invalidateQueries({
             queryKey: queryKeys.user(id),
           })
-          await queryClient.invalidateQueries({
+          queryClient.invalidateQueries({
             queryKey: queryKeys.logs(1, 10),
           })
         }
@@ -47,11 +52,11 @@ export const user = {
   toggleUserStatus(id: number) {
     return useMutation({
       mutationFn: () => api.toggleUserStatus(id),
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
           queryKey: queryKeys.user(id),
         })
-        await queryClient.invalidateQueries({
+        queryClient.invalidateQueries({
           queryKey: queryKeys.users(),
         })
       },
