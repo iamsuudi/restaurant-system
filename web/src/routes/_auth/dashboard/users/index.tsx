@@ -1,9 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { RotateCcw, UserSearch } from 'lucide-react'
 import _ from 'lodash'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { CreateDialog } from './-create'
+import { EditDialog } from './-edit'
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ export const Route = createFileRoute('/_auth/dashboard/users/')({
 })
 
 function RouteComponent() {
+  const { data: me } = query.currentUserQuery()
   const { data, error, refetch, isRefetching } = query.usersQuery()
 
   return (
@@ -65,7 +67,17 @@ function RouteComponent() {
                           className="bg-secondary object-cover size-10 rounded-full"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {me?.id === user.id ? (
+                          <Link to="/dashboard/profile">{user.name}</Link>
+                        ) : (
+                          <EditDialog id={user.id}>
+                            <span className="hover:cursor-pointer">
+                              {user.name}
+                            </span>
+                          </EditDialog>
+                        )}
+                      </TableCell>
                       <TableCell className="">
                         <RoleRender role={user.role} />
                       </TableCell>
