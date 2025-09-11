@@ -194,12 +194,14 @@ export function CreateDialog() {
               <DialogClose asChild>
                 <Button variant="outline">Cancel</Button>
               </DialogClose>
-              <form.AppForm>
-                <form.SubscribeButton
-                  label="Create"
-                  disabled={!documents || documents.length == 0}
-                />
-              </form.AppForm>
+              <div>
+                <form.AppForm>
+                  <form.SubscribeButton
+                    label="Create"
+                    disabled={!documents || documents.length == 0}
+                  />
+                </form.AppForm>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>

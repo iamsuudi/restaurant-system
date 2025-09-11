@@ -1,8 +1,9 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { RotateCcw, UserSearch } from 'lucide-react'
 import _ from 'lodash'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { CreateDialog } from './-create'
 import {
   Table,
   TableBody,
@@ -22,7 +23,6 @@ export const Route = createFileRoute('/_auth/dashboard/users/')({
 })
 
 function RouteComponent() {
-  const router = useRouter()
   const { data, error, refetch, isRefetching } = query.usersQuery()
 
   return (
@@ -34,9 +34,7 @@ function RouteComponent() {
             <Button variant={'outline'} size={'icon'} onClick={() => refetch()}>
               <RotateCcw className={cn({ 'animate-spin': isRefetching })} />
             </Button>
-            <Button onClick={() => router.navigate({ to: '/dashboard/menu' })}>
-              Create User
-            </Button>
+            <CreateDialog />
           </div>
         </div>
         <div>

@@ -3,7 +3,7 @@ import type { User } from '@/types/user'
 
 export const user = {
   async createUser(data: FormData) {
-    await apiFetch(`/api/users`, {
+    await apiFetch(`/api/auth/register`, {
       method: 'POST',
       body: data,
     })
