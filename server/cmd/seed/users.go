@@ -91,6 +91,7 @@ func seedUsers(ctx context.Context, queries *repository.Queries) {
 		}
 		err = queries.CreateAccount(ctx, repository.CreateAccountParams{
 			UserID:       user.ID,
+			Blocked:      false,
 			PasswordHash: string(hashedPassword),
 		})
 		if err != nil {

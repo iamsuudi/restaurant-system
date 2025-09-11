@@ -1,6 +1,6 @@
 -- name: CreateAccount :exec
-INSERT INTO account (user_id, password_hash)
-VALUES ($1, $2);
+INSERT INTO account (user_id, password_hash, blocked)
+VALUES ($1, $2, $3);
 
 -- name: GetAccount :one
 SELECT * FROM account

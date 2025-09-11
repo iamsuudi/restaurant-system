@@ -21,17 +21,18 @@ func (q *Queries) BlockAccount(ctx context.Context, userID int32) error {
 }
 
 const createAccount = `-- name: CreateAccount :exec
-INSERT INTO account (user_id, password_hash)
-VALUES ($1, $2)
+INSERT INTO account (user_id, password_hash, blocked)
+VALUES ($1, $2, $3)
 `
 
 type CreateAccountParams struct {
 	UserID       int32  `db:"user_id" json:"user_id"`
 	PasswordHash string `db:"password_hash" json:"password_hash"`
+	Blocked      bool   `db:"blocked" json:"blocked"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
-	_, err := q.db.Exec(ctx, createAccount, arg.UserID, arg.PasswordHash)
+	_, err := q.db.Exec(ctx, createAccount, arg.UserID, arg.PasswordHash, arg.Blocked)
 	return err
 }
 

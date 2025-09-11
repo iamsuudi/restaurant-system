@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -64,9 +63,8 @@ func (h *Handler) UpdateUserInfo(c *gin.Context) {
 		return
 	}
 
-	var input types.UserPayload
-	if err = c.BindJSON(&input); err != nil {
-		fmt.Println(err.Error())
+	var input types.UserEditPayload
+	if err = c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}

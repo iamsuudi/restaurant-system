@@ -61,7 +61,7 @@ function RouteComponent() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <img
-                          src={user.picture}
+                          src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
                           className="bg-secondary object-cover size-10 rounded-full"
                         />
                       </TableCell>

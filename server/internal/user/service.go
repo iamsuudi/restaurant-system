@@ -30,7 +30,7 @@ func (s *Service) ListUsers(ctx context.Context) ([]repository.ListUsersRow, err
 	return s.q.ListUsers(ctx)
 }
 
-func (s *Service) UpdateUserInfo(ctx context.Context, id int32, input types.UserPayload, picture *string) error {
+func (s *Service) UpdateUserInfo(ctx context.Context, id int32, input types.UserEditPayload, picture *string) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -41,10 +41,10 @@ func (s *Service) UpdateUserInfo(ctx context.Context, id int32, input types.User
 
 	_, err = qtx.UpdateUserInfo(ctx, repository.UpdateUserInfoParams{
 		ID:      id,
-		Name:    &input.Name,
-		Role:    &input.Role,
-		Email:   &input.Email,
-		Phone:   &input.Phone,
+		Name:    input.Name,
+		Role:    input.Role,
+		Email:   input.Email,
+		Phone:   input.Phone,
 		Picture: picture,
 	})
 	if err != nil {
