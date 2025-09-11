@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ForgetPasswordRouteImport } from './routes/forget-password'
+import { Route as BlockedRouteImport } from './routes/blocked'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthDashboardRouteRouteImport } from './routes/_auth/dashboard.route'
@@ -27,6 +28,11 @@ import { Route as AuthDashboardOrdersIdRouteImport } from './routes/_auth/dashbo
 const ForgetPasswordRoute = ForgetPasswordRouteImport.update({
   id: '/forget-password',
   path: '/forget-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlockedRoute = BlockedRouteImport.update({
+  id: '/blocked',
+  path: '/blocked',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -98,6 +104,7 @@ const AuthDashboardOrdersIdRoute = AuthDashboardOrdersIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/blocked': typeof BlockedRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/dashboard': typeof AuthDashboardRouteRouteWithChildren
   '/dashboard/activity': typeof AuthDashboardActivityRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/blocked': typeof BlockedRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/dashboard/activity': typeof AuthDashboardActivityRoute
   '/dashboard/notification': typeof AuthDashboardNotificationRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
+  '/blocked': typeof BlockedRoute
   '/forget-password': typeof ForgetPasswordRoute
   '/_auth/dashboard': typeof AuthDashboardRouteRouteWithChildren
   '/_auth/dashboard/activity': typeof AuthDashboardActivityRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/blocked'
     | '/forget-password'
     | '/dashboard'
     | '/dashboard/activity'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/blocked'
     | '/forget-password'
     | '/dashboard/activity'
     | '/dashboard/notification'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth'
+    | '/blocked'
     | '/forget-password'
     | '/_auth/dashboard'
     | '/_auth/dashboard/activity'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
+  BlockedRoute: typeof BlockedRoute
   ForgetPasswordRoute: typeof ForgetPasswordRoute
 }
 
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       path: '/forget-password'
       fullPath: '/forget-password'
       preLoaderRoute: typeof ForgetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blocked': {
+      id: '/blocked'
+      path: '/blocked'
+      fullPath: '/blocked'
+      preLoaderRoute: typeof BlockedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -341,6 +361,7 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
+  BlockedRoute: BlockedRoute,
   ForgetPasswordRoute: ForgetPasswordRoute,
 }
 export const routeTree = rootRouteImport

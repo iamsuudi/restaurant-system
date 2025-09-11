@@ -137,26 +137,31 @@ const data = {
       name: 'Dashboard',
       url: '/dashboard',
       icon: Home,
+      role: ['admin', 'kitchen', 'waiter'],
     },
     {
       name: 'Menu',
       url: '/dashboard/menu',
       icon: UtensilsCrossed,
+      role: ['admin', 'kitchen', 'waiter'],
     },
     {
       name: 'Orders',
       url: '/dashboard/orders',
       icon: ChefHat,
+      role: ['admin', 'kitchen', 'waiter'],
     },
     {
       name: 'Users',
       url: '/dashboard/users',
       icon: Users,
+      role: ['admin'],
     },
     {
       name: 'Analytics',
       url: '/dashboard/analytics',
       icon: TrendingUp,
+      role: ['admin'],
     },
   ],
 }
@@ -190,6 +195,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu className="space-y-1">
           {data.projects.map((item) => {
             const isActive = item.url === location.pathname
+            const authorized = item.role.includes(user?.role || 'none')
+            if (!authorized) return null
 
             return (
               <SidebarMenuItem key={item.name}>
