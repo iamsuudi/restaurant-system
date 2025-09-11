@@ -19,11 +19,9 @@ export const user = {
   async updateUserInfo(
     id: number,
     info: {
-      first: string
-      second: string
-      last: string
-      email: string
-      phone: string
+      name?: string
+      email?: string
+      phone?: string
     },
   ) {
     await apiFetch(`/api/users/${id}/info`, {
@@ -41,5 +39,10 @@ export const user = {
       `/api/users/role?role_slug=${role_slug}&page=${page}&rows=${rows}&query=${query}`,
     )
     return data as { users: Array<User>; count: number }
+  },
+  async toggleUserStatus(id: number) {
+    await apiFetch(`/api/users/${id}/status`, {
+      method: 'PUT',
+    })
   },
 }

@@ -12,7 +12,9 @@ CREATE TABLE "user" (
 
 CREATE TABLE account (
     id              SERIAL PRIMARY KEY,
-    password_hash   TEXT    NOT NULL,
+    password_hash   TEXT   NOT NULL,
+    invited         BOOLEAN NOT NULL DEFAULT FALSE,
+    blocked         BOOLEAN NOT NULL DEFAULT TRUE,
     user_id         INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     created_at      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at      TIMESTAMP(3)

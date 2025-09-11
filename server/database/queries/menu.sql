@@ -7,7 +7,7 @@ RETURNING *;
 SELECT * FROM menu_item WHERE id = $1;
 
 -- name: ListMenuItems :many
-SELECT * FROM menu_item ORDER BY created_at DESC;
+SELECT * FROM menu_item ORDER BY name ASC;
 
 -- name: ListActiveMenuItems :many
 SELECT * FROM menu_item WHERE status = TRUE ORDER BY created_at DESC;

@@ -93,7 +93,7 @@ function RootComponent() {
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem>
-                      <Link to="/dashboard/profile">
+                      <Link to="/dashboard/profile" className="w-full">
                         <UserRoundPen
                           className="inline mr-2 size-4 opacity-90"
                           aria-hidden="true"
@@ -102,7 +102,7 @@ function RootComponent() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Link to="/dashboard/settings">
+                      <Link to="/dashboard/settings" className="w-full">
                         <Settings
                           className="inline mr-2 size-4 opacity-90"
                           aria-hidden="true"
@@ -111,7 +111,7 @@ function RootComponent() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Link to="/dashboard/activity">
+                      <Link to="/dashboard/activity" className="w-full">
                         <Activity
                           className="inline mr-2 size-4 opacity-90"
                           aria-hidden="true"

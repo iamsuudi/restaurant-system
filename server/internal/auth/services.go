@@ -23,7 +23,7 @@ func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
 }
 
 // Authenticate verifies a user's email and password.
-func (s *Service) Authenticate(ctx context.Context, email, password string) (*repository.User, error) {
+func (s *Service) Authenticate(ctx context.Context, email, password string) (*repository.GetUserByEmailRow, error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -148,10 +148,10 @@ func (s *Service) DeleteRefreshToken(ctx context.Context, token string) error {
 	return s.q.DeleteRefreshToken(ctx, token)
 }
 
-func (s *Service) GetUserByID(ctx context.Context, userID int32) (repository.User, error) {
+func (s *Service) GetUserByID(ctx context.Context, userID int32) (repository.GetUserByIDRow, error) {
 	user, err := s.q.GetUserByID(ctx, userID)
 	if err != nil {
-		return repository.User{}, err
+		return repository.GetUserByIDRow{}, err
 	}
 	return user, nil
 }

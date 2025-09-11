@@ -1,6 +1,8 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { ExternalLink, UserSearch } from 'lucide-react'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { RotateCcw, UserSearch } from 'lucide-react'
 import _ from 'lodash'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 import {
   Table,
   TableBody,
@@ -9,81 +11,130 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { query } from '@/hooks/query'
 import { ErrorComponent } from '@/components/error-component'
 import { RoleRender } from '@/components/role-render'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_auth/dashboard/users/')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { data, error } = query.usersQuery()
+  const router = useRouter()
+  const { data, error, refetch, isRefetching } = query.usersQuery()
 
   return (
-    <div>
-      <div>
-        <Card className="shadow border-none max-w-screen-xl mx-auto my-16">
-          <CardTitle className="text-center text-xl">System Users</CardTitle>
-          <CardContent>
-            {data?.length == 0 ? (
-              <div className="w-full h-80 flex flex-col gap-10 items-center justify-center opacity-70">
-                <UserSearch className="size-20 opacity-60" />
-                No users registered yet.
-              </div>
-            ) : (
-              <Table className="text-sm">
-                <TableHeader>
-                  <TableRow className="bg-secondary">
-                    <TableHead></TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data?.map((user) => {
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <img
-                            src={user.picture}
-                            className="bg-fuchsia-500 object-cover size-10 rounded-full"
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {user.name}
-                        </TableCell>
-                        <TableCell className="">
-                          <RoleRender role={user.role} />
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell className="">{user.phone}</TableCell>
-                        <TableCell>
-                          <Link
-                            to={`/dashboard/users/$id`}
-                            params={{ id: user.id.toString() }}
-                            className="text-blue-500 hover:underline"
-                          >
-                            Detail{' '}
-                            <ExternalLink className="size-4 inline mb-1" />
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            {error && <ErrorComponent error={error} />}
-          </CardFooter>
-        </Card>
-      </div>
+    <div className="p-5">
+      <div className="max-w-screen-lg mx-auto space-y-10">
+        <div className="flex justify-between items-center">
+          <h1 className="font-black text-2xl">System Users</h1>
+          <div className="flex items-center gap-4">
+            <Button variant={'outline'} size={'icon'} onClick={() => refetch()}>
+              <RotateCcw className={cn({ 'animate-spin': isRefetching })} />
+            </Button>
+            <Button onClick={() => router.navigate({ to: '/dashboard/menu' })}>
+              Create User
+            </Button>
+          </div>
+        </div>
+        <div>
+          {data?.length == 0 ? (
+            <div className="w-full h-80 flex flex-col gap-10 items-center justify-center opacity-70">
+              <UserSearch className="size-20 opacity-60" />
+              No users registered yet.
+            </div>
+          ) : (
+            <Table className="text-sm">
+              <TableHeader>
+                <TableRow className="bg-secondary">
+                  <TableHead></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.map((user) => {
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <img
+                          src={user.picture}
+                          className="bg-secondary object-cover size-10 rounded-full"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="">
+                        <RoleRender role={user.role} />
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell className="">{user.phone}</TableCell>
+                      <TableCell className="">
+                        <StatusRender id={user.id} status={!user.blocked} />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+        <div className="flex justify-center">
+          {error && <ErrorComponent error={error} />}
+        </div>
+      </div>{' '}
     </div>
+  )
+}
+
+export const StatusRender = ({
+  status,
+  id,
+}: {
+  status: boolean
+  id: number
+}) => {
+  const { mutate, isPending, isSuccess, error } = query.toggleUserStatus(id)
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success('Successful!')
+    } else if (error) {
+      toast.error('Failed: ' + error.message)
+    }
+  }, [isSuccess, error])
+
+  return (
+    <button
+      type="button"
+      onClick={() => mutate()}
+      disabled={isPending}
+      className={cn(
+        'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
+        {
+          'bg-red-100': status == false,
+          'bg-green-100': status == true,
+        },
+      )}
+    >
+      <span
+        className={cn('size-2 rounded-full animate-pulse', {
+          'bg-red-500': status == false,
+          'bg-green-500': status == true,
+        })}
+      />
+      <span
+        className={cn('mt-1', {
+          'text-red-500': status == false,
+          'text-green-500': status == true,
+        })}
+      >
+        {_.capitalize(status ? 'Active' : 'Blocked')}
+      </span>
+    </button>
   )
 }

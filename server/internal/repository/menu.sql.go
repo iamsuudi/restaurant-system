@@ -118,7 +118,7 @@ func (q *Queries) ListActiveMenuItems(ctx context.Context) ([]MenuItem, error) {
 }
 
 const listMenuItems = `-- name: ListMenuItems :many
-SELECT id, name, description, price, picture, category, status, ingredients, created_at, updated_at FROM menu_item ORDER BY created_at DESC
+SELECT id, name, description, price, picture, category, status, ingredients, created_at, updated_at FROM menu_item ORDER BY name ASC
 `
 
 func (q *Queries) ListMenuItems(ctx context.Context) ([]MenuItem, error) {

@@ -9,16 +9,16 @@ export const RoleRender = ({ role }: { role: string }) => {
         'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs',
         {
           'bg-orange-200': role === 'kitchen',
-          'bg-green-200': role === 'waiter',
-          'bg-sky-200': role === 'admin',
+          'bg-purple-200': role === 'waiter',
+          'bg-rose-200': role === 'admin',
         },
       )}
     >
       {role == 'kitchen' && <ChefHat className="size-4 text-orange-600" />}
       {role == 'waiter' && (
-        <UtensilsCrossed className="size-4 text-green-600" />
+        <UtensilsCrossed className="size-4 text-purple-600" />
       )}
-      {role == 'admin' && <UserLock className="size-4 text-sky-600" />}
+      {role == 'admin' && <UserLock className="size-4 text-rose-600" />}
       <span className="mt-1">{_.capitalize(role)}</span>
     </div>
   )

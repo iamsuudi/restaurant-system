@@ -11,6 +11,8 @@ import (
 type Account struct {
 	ID           int32      `db:"id" json:"id"`
 	PasswordHash string     `db:"password_hash" json:"password_hash"`
+	Invited      bool       `db:"invited" json:"invited"`
+	Blocked      bool       `db:"blocked" json:"blocked"`
 	UserID       int32      `db:"user_id" json:"user_id"`
 	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 	DeletedAt    *time.Time `db:"deleted_at" json:"deleted_at"`

@@ -59,4 +59,4 @@ seed_db:
 	go run ./cmd/seed/ -file=cmd/seed/residents.json
 
 run_server:
-	go run cmd/server/main.go
+	go run ./cmd/server
