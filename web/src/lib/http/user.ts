@@ -16,17 +16,10 @@ export const user = {
     const data = await apiFetch(`/api/users/${id}`)
     return data as User
   },
-  async updateUserInfo(
-    id: number,
-    info: {
-      name?: string
-      email?: string
-      phone?: string
-    },
-  ) {
+  async updateUserInfo(id: number, payload: FormData) {
     await apiFetch(`/api/users/${id}/info`, {
       method: 'PUT',
-      body: JSON.stringify({ ...info }),
+      body: payload,
     })
   },
   async getUsersByRole(

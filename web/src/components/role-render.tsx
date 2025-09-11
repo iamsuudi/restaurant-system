@@ -19,7 +19,7 @@ export const RoleRender = ({ role }: { role: string }) => {
         <UtensilsCrossed className="size-4 text-purple-600" />
       )}
       {role == 'admin' && <UserLock className="size-4 text-rose-600" />}
-      <span className="mt-1">{_.capitalize(role)}</span>
+      <span className="mt-1 text-black">{_.capitalize(role)}</span>
     </div>
   )
 }

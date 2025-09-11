@@ -61,7 +61,7 @@ function RouteComponent() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <img
-                          src={user.picture}
+                          src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
                           className="bg-secondary object-cover size-10 rounded-full"
                         />
                       </TableCell>
@@ -96,6 +96,7 @@ export const StatusRender = ({
   status: boolean
   id: number
 }) => {
+  const { data: me } = query.currentUserQuery()
   const { mutate, isPending, isSuccess, error } = query.toggleUserStatus(id)
 
   useEffect(() => {
@@ -110,7 +111,7 @@ export const StatusRender = ({
     <button
       type="button"
       onClick={() => mutate()}
-      disabled={isPending}
+      disabled={isPending || me?.id === id}
       className={cn(
         'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
         {

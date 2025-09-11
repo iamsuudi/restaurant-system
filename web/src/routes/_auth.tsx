@@ -17,6 +17,10 @@ export const Route = createFileRoute('/_auth')({
           redirect: location.pathname + location.search,
         },
       })
+    } else if (data.blocked) {
+      throw redirect({
+        to: '/blocked',
+      })
     }
   },
   component: () => <Outlet />,

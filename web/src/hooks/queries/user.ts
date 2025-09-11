@@ -26,8 +26,7 @@ export const user = {
 
   updateUserInfoMutation(id: number, profile?: boolean) {
     return useMutation({
-      mutationFn: (info: { name?: string; email?: string; phone?: string }) =>
-        api.updateUserInfo(id, info),
+      mutationFn: (payload: FormData) => api.updateUserInfo(id, payload),
       onSuccess: async () => {
         if (profile) {
           await queryClient.invalidateQueries({
