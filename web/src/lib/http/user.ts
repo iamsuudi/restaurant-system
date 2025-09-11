@@ -40,4 +40,9 @@ export const user = {
     )
     return data as { users: Array<User>; count: number }
   },
+  async toggleUserStatus(id: number) {
+    await apiFetch(`/api/users/${id}/status`, {
+      method: 'PUT',
+    })
+  },
 }

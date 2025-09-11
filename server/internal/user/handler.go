@@ -89,3 +89,20 @@ func (h *Handler) UpdateUserInfo(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, gin.H{"message": "User updated successfully"})
 }
+
+func (h *Handler) ToggleUserStatus(c *gin.Context) {
+	raw := c.Param("id")
+	targetId, err := strconv.Atoi(raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err = h.service.ToggleUserStatus(c, int32(targetId))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"message": "User blocked successfully"})
+}

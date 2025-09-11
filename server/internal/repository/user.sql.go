@@ -7,22 +7,8 @@ package repository
 
 import (
 	"context"
+	"time"
 )
-
-const createAccount = `-- name: CreateAccount :exec
-INSERT INTO account (user_id, password_hash)
-VALUES ($1, $2)
-`
-
-type CreateAccountParams struct {
-	UserID       int32  `db:"user_id" json:"user_id"`
-	PasswordHash string `db:"password_hash" json:"password_hash"`
-}
-
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
-	_, err := q.db.Exec(ctx, createAccount, arg.UserID, arg.PasswordHash)
-	return err
-}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO "user" (name, email, phone, role, picture)
@@ -60,33 +46,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const getAccount = `-- name: GetAccount :one
-SELECT id, password_hash, user_id, created_at, deleted_at FROM account
-WHERE account.user_id = $1
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT u.id, u.name, u.email, u.phone, u.role, u.picture, u.created_at, u.deleted_at, a.blocked AS blocked
+FROM "user" u
+LEFT JOIN account a ON u.id = a.user_id
+WHERE u.email = $1 AND u.deleted_at IS NULL
 `
 
-func (q *Queries) GetAccount(ctx context.Context, userID int32) (Account, error) {
-	row := q.db.QueryRow(ctx, getAccount, userID)
-	var i Account
-	err := row.Scan(
-		&i.ID,
-		&i.PasswordHash,
-		&i.UserID,
-		&i.CreatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
+type GetUserByEmailRow struct {
+	ID        int32      `db:"id" json:"id"`
+	Name      string     `db:"name" json:"name"`
+	Email     string     `db:"email" json:"email"`
+	Phone     string     `db:"phone" json:"phone"`
+	Role      string     `db:"role" json:"role"`
+	Picture   *string    `db:"picture" json:"picture"`
+	CreatedAt time.Time  `db:"created_at" json:"created_at"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
+	Blocked   *bool      `db:"blocked" json:"blocked"`
 }
 
-const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, phone, role, picture, created_at, deleted_at
-FROM "user"
-WHERE email = $1 AND deleted_at IS NULL
-`
-
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -96,19 +77,33 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Picture,
 		&i.CreatedAt,
 		&i.DeletedAt,
+		&i.Blocked,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, email, phone, role, picture, created_at, deleted_at
-FROM "user"
-WHERE id = $1 AND deleted_at IS NULL
+SELECT u.id, u.name, u.email, u.phone, u.role, u.picture, u.created_at, u.deleted_at, a.blocked AS blocked
+FROM "user" u
+LEFT JOIN account a ON u.id = a.user_id
+WHERE u.id = $1 AND u.deleted_at IS NULL
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
+type GetUserByIDRow struct {
+	ID        int32      `db:"id" json:"id"`
+	Name      string     `db:"name" json:"name"`
+	Email     string     `db:"email" json:"email"`
+	Phone     string     `db:"phone" json:"phone"`
+	Role      string     `db:"role" json:"role"`
+	Picture   *string    `db:"picture" json:"picture"`
+	CreatedAt time.Time  `db:"created_at" json:"created_at"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
+	Blocked   *bool      `db:"blocked" json:"blocked"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i User
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -118,6 +113,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int32) (User, error) {
 		&i.Picture,
 		&i.CreatedAt,
 		&i.DeletedAt,
+		&i.Blocked,
 	)
 	return i, err
 }
@@ -134,20 +130,34 @@ func (q *Queries) GetUserRole(ctx context.Context, id int32) (string, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, name, email, phone, role, picture, created_at, deleted_at
-FROM "user"
-WHERE deleted_at IS NULL
+SELECT u.id, u.name, u.email, u.phone, u.role, u.picture, u.created_at, u.deleted_at, a.blocked AS blocked
+FROM "user" u
+LEFT JOIN account a ON u.id = a.user_id
+WHERE u.deleted_at IS NULL
+ORDER BY u.name ASC
 `
 
-func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
+type ListUsersRow struct {
+	ID        int32      `db:"id" json:"id"`
+	Name      string     `db:"name" json:"name"`
+	Email     string     `db:"email" json:"email"`
+	Phone     string     `db:"phone" json:"phone"`
+	Role      string     `db:"role" json:"role"`
+	Picture   *string    `db:"picture" json:"picture"`
+	CreatedAt time.Time  `db:"created_at" json:"created_at"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
+	Blocked   *bool      `db:"blocked" json:"blocked"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	rows, err := q.db.Query(ctx, listUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []User{}
+	items := []ListUsersRow{}
 	for rows.Next() {
-		var i User
+		var i ListUsersRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -157,6 +167,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.Picture,
 			&i.CreatedAt,
 			&i.DeletedAt,
+			&i.Blocked,
 		); err != nil {
 			return nil, err
 		}

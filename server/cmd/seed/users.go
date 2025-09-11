@@ -14,56 +14,54 @@ import (
 
 // CreateUsers returns the proportional user list with plain passwords.
 func CreateUsers() []types.UserPayload {
-	admin, waiter, kitchen := "admin", "waiter", "kitchen"
-
 	users := []types.UserPayload{
 		types.UserPayload{
 			Name:     "Abdulfetah Suudi",
 			Email:    "suudi@example.com",
 			Phone:    "0991752985",
-			Role:     &admin,
+			Role:     "admin",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Melissa Key",
 			Email:    "melissa@example.com",
 			Phone:    "0900110022",
-			Role:     &waiter,
+			Role:     "waiter",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Lawrence Bell",
 			Email:    "lawrence@example.com",
 			Phone:    "0900110022",
-			Role:     &waiter,
+			Role:     "waiter",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Annette Oneal",
 			Email:    "annette@example.com",
 			Phone:    "0900110022",
-			Role:     &waiter,
+			Role:     "waiter",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Diana Cabrera",
 			Email:    "diana@example.com",
 			Phone:    "0900110022",
-			Role:     &kitchen,
+			Role:     "kitchen",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Brent Chambers",
 			Email:    "brent@example.com",
 			Phone:    "0900110022",
-			Role:     &kitchen,
+			Role:     "kitchen",
 			Password: "password",
 		},
 		types.UserPayload{
 			Name:     "Michael Clark",
 			Email:    "michael@example.com",
 			Phone:    "0900110022",
-			Role:     &kitchen,
+			Role:     "kitchen",
 			Password: "password",
 		},
 	}
@@ -86,7 +84,7 @@ func seedUsers(ctx context.Context, queries *repository.Queries) {
 			Name:  user.Name,
 			Email: user.Email,
 			Phone: user.Phone,
-			Role:  *user.Role,
+			Role:  user.Role,
 		})
 		if err != nil {
 			log.Fatalf("Failed to seed user: %v", err)

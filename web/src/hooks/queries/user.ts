@@ -44,4 +44,18 @@ export const user = {
       },
     })
   },
+
+  toggleUserStatus(id: number) {
+    return useMutation({
+      mutationFn: () => api.toggleUserStatus(id),
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.user(id),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.users(),
+        })
+      },
+    })
+  },
 }

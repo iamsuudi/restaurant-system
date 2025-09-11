@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	AddOrderItem(ctx context.Context, arg AddOrderItemParams) (OrderItem, error)
+	BlockAccount(ctx context.Context, userID int32) error
 	ClearOrderItems(ctx context.Context, orderID int32) error
 	CountListCompletedOrders(ctx context.Context) (int64, error)
 	CountListOrders(ctx context.Context) (int64, error)
@@ -30,17 +31,18 @@ type Querier interface {
 	GetOrder(ctx context.Context, id int32) (GetOrderRow, error)
 	GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderItemsRow, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshTokens, error)
-	GetUserByEmail(ctx context.Context, email string) (User, error)
-	GetUserByID(ctx context.Context, id int32) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
+	GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error)
 	GetUserRole(ctx context.Context, id int32) (string, error)
 	GetValidPasswordResetToken(ctx context.Context, token string) (PasswordResetTokens, error)
 	ListActiveMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error)
 	ListMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error)
-	ListUsers(ctx context.Context) ([]User, error)
+	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 	MarkTokenAsUsed(ctx context.Context, id int32) error
 	SoftDeleteUser(ctx context.Context, id int32) error
+	UnblockAccount(ctx context.Context, userID int32) error
 	UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) (MenuItem, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order, error)
 	UpdateOrderItemQuantity(ctx context.Context, arg UpdateOrderItemQuantityParams) (OrderItem, error)

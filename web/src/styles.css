@@ -4,11 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@font-face {
-  font-family: 'Roboto';
-  src: url('/fonts/Roboto-VariableFont_wdth,wght.ttf`');
-}
-
 body {
   @apply m-0;
   font-family:
