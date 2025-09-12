@@ -22,5 +22,19 @@ export const queryKeys = {
   users: () => ['query', 'users'],
   log: (id: string) => ['query', 'logs', 'one', { id }],
   logs: (page: number, rows: number) => ['query', 'logs', { page }, { rows }],
-  analytics: (target: string) => ['query', 'analytics', { target }],
+  analytics: {
+    countCompletedOrders: (target: string) => [
+      'query',
+      'analytics',
+      'completed-orders',
+      { target },
+    ],
+    avgPrepTime: (target: string) => [
+      'query',
+      'analytics',
+      'avg-prep-time',
+      { target },
+    ],
+    countActiveOrders: () => ['query', 'analytics', 'active-orders'],
+  },
 }

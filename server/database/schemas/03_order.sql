@@ -1,7 +1,7 @@
 CREATE TABLE "order" (
     id               SERIAL PRIMARY KEY,
     waiter_id        INTEGER REFERENCES "user"(id),
-    status           VARCHAR(255) NOT NULL DEFAULT 'PENDING',
+    status           VARCHAR(255) NOT NULL DEFAULT 'pending',
     table_number     VARCHAR(5) NOT NULL,
     note             TEXT,
     total_price      FLOAT NOT NULL,

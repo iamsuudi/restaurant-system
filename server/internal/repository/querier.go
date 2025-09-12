@@ -10,8 +10,14 @@ import (
 
 type Querier interface {
 	AddOrderItem(ctx context.Context, arg AddOrderItemParams) (OrderItem, error)
+	AvgPreparationTimeDaily(ctx context.Context) (interface{}, error)
+	AvgPreparationTimeMonthly(ctx context.Context) (interface{}, error)
+	AvgPreparationTimeWeekly(ctx context.Context) (interface{}, error)
 	BlockAccount(ctx context.Context, userID int32) error
 	ClearOrderItems(ctx context.Context, orderID int32) error
+	CountCompletedOrdersDaily(ctx context.Context) (int64, error)
+	CountCompletedOrdersMonthly(ctx context.Context) (int64, error)
+	CountCompletedOrdersWeekly(ctx context.Context) (int64, error)
 	CountListAuditLogs(ctx context.Context) (int64, error)
 	CountListCompletedOrders(ctx context.Context) (int64, error)
 	CountListOrders(ctx context.Context) (int64, error)
@@ -29,6 +35,9 @@ type Querier interface {
 	DeleteRefreshTokensByUser(ctx context.Context, userID int32) error
 	GetAccount(ctx context.Context, userID int32) (Account, error)
 	GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, error)
+	GetCompletedOrdersDaily(ctx context.Context) ([]Order, error)
+	GetCompletedOrdersMonthly(ctx context.Context) ([]Order, error)
+	GetCompletedOrdersWeekly(ctx context.Context) ([]Order, error)
 	GetMenuItem(ctx context.Context, id int32) (MenuItem, error)
 	GetOrder(ctx context.Context, id int32) (GetOrderRow, error)
 	GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderItemsRow, error)
