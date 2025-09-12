@@ -7,6 +7,7 @@ import (
 
 	"restaurant-server/database"
 	"restaurant-server/internal/activity"
+	"restaurant-server/internal/analytics"
 	"restaurant-server/internal/auth"
 	"restaurant-server/internal/menu"
 	"restaurant-server/internal/orders"
@@ -46,6 +47,7 @@ func main() {
 	menu.RegisterRoutes(r.Group("/api"), db, q)
 	user.RegisterRoutes(r.Group("/api"), db, q)
 	activity.RegisterRoutes(r.Group("/api"), db, q)
+	analytics.RegisterRoutes(r.Group("/api"), db, q)
 
 	// WebSocket endpoints
 	wsGroup := r.Group("/ws")
