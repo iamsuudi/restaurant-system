@@ -1,5 +1,4 @@
 import {
-  Link,
   createFileRoute,
   notFound,
   useCanGoBack,
@@ -32,7 +31,6 @@ function RouteComponent() {
   const router = useRouter()
   const canGoBack = useCanGoBack()
 
-  const { data: me } = query.currentUserQuery()
   const { data: log, isPending, error } = query.logQuery(id)
 
   return (
@@ -65,19 +63,9 @@ function RouteComponent() {
             <Separator />
             <div className="flex items-center gap-2">
               <p className="text-gray-500">Actor</p>
-              <Link
-                className="hover:underline hover:text-primary ml-auto"
-                to={
-                  me?.id === log.actor_id
-                    ? '/dashboard/profile'
-                    : '/dashboard/users/$id'
-                }
-                params={{
-                  id: log.actor_id,
-                }}
-              >
+              <p className="hover:underline hover:cursor-pointer hover:text-primary ml-auto">
                 {log.actor_name}
-              </Link>
+              </p>
               <RoleRender role={log.actor_role.toLowerCase()} />
             </div>
             <div className="flex items-center gap-2">
