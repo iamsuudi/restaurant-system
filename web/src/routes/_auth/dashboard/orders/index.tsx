@@ -22,9 +22,7 @@ function RouteComponent() {
       <div className="max-w-screen-md w-full mx-auto space-y-16">
         <div className="flex justify-between items-center">
           <h1 className="font-black text-2xl">
-            {user?.role == 'kitchen'
-              ? 'Kitchen Orders Management'
-              : 'Active Orders'}
+            {user?.role == 'kitchen' ? 'Orders Management' : 'Active Orders'}
           </h1>
           <div className="flex items-center gap-4">
             <Button variant={'outline'} size={'icon'} onClick={() => refetch()}>
