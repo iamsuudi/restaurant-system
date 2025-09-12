@@ -82,6 +82,7 @@ func (s *Service) RegisterUser(ctx context.Context, actorID int32, input types.U
 	err = qtx.CreateAccount(ctx, repository.CreateAccountParams{
 		UserID:       user.ID,
 		PasswordHash: string(hashedPassword),
+		Blocked:      true,
 	})
 	if err != nil {
 		return err
@@ -97,6 +98,9 @@ func (s *Service) RegisterUser(ctx context.Context, actorID int32, input types.U
 			"after": user,
 		},
 	})
+	if err != nil {
+		return err
+	}
 
 	return tx.Commit(ctx)
 }
