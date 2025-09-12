@@ -68,12 +68,12 @@ function RouteComponent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.logs.map((log, index) => {
+                {data?.logs.map((log) => {
                   return (
                     <TableRow key={log.id}>
-                      <TableCell>{index + 1}</TableCell>
+                      <TableCell></TableCell>
                       <TableCell className="font-medium">
-                        <div className="flex flex-col items-start gap-2">
+                        <div className="flex flex-col items-start">
                           <Link
                             className="hover:underline hover:text-primary"
                             to={

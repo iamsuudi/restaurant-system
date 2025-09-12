@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
+import { useRouter } from '@tanstack/react-router'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
 import { query } from '@/hooks/query'
@@ -68,7 +69,7 @@ export const StatusRender = ({
         })}
       />
       <span
-        className={cn('mt-0', {
+        className={cn('mt-1', {
           'text-gray-500': status == 'Pending',
           'text-yellow-500': status == 'Processing',
           'text-sky-500': status == 'Ready',
@@ -82,11 +83,13 @@ export const StatusRender = ({
 }
 
 export const DeleteOrder = ({ id }: { id: number }) => {
+  const router = useRouter()
   const { mutate, isPending, isSuccess, error } = query.deleteOrder(id)
 
   useEffect(() => {
     if (isSuccess) {
       toast.success('Successful!')
+      router.navigate({ to: '/dashboard/orders' })
     } else if (error) {
       toast.error('Failed: ' + error.message)
     }

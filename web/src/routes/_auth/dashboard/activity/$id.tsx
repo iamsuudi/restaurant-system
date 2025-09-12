@@ -66,7 +66,7 @@ function RouteComponent() {
             <div className="flex items-center gap-2">
               <p className="text-gray-500">Actor</p>
               <Link
-                className="hover:underline hover:text-primary"
+                className="hover:underline hover:text-primary ml-auto"
                 to={
                   me?.id === log.actor_id
                     ? '/dashboard/profile'
@@ -101,6 +101,8 @@ function RouteComponent() {
               displayDataTypes={false}
               enableClipboard={false}
               collapsed={false}
+              indentWidth={24}
+              className="p-4"
             />
           </div>
         )}

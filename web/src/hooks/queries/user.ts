@@ -42,7 +42,7 @@ export const user = {
             queryKey: queryKeys.user(id),
           })
           queryClient.invalidateQueries({
-            queryKey: queryKeys.logs(1, 10),
+            queryKey: queryKeys.users(),
           })
         }
       },

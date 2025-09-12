@@ -67,7 +67,12 @@ export function ActionRenderer({ action }: { action: string }) {
   return (
     <button
       className={cn('rounded-md flex items-center gap-3 w-fit py-1 px-3', {
-        'bg-sky-100': action.startsWith('update'),
+        'bg-sky-100':
+          action.startsWith('update') ||
+          action.startsWith('edit') ||
+          action.startsWith('modify') ||
+          action.startsWith('change') ||
+          action.startsWith('toggle'),
         'bg-orange-100': action.startsWith('override'),
         'bg-green-100':
           action.startsWith('create') ||
@@ -85,7 +90,12 @@ export function ActionRenderer({ action }: { action: string }) {
     >
       <span
         className={cn('text-background size-2 rounded-full', {
-          'bg-sky-500': action.startsWith('update'),
+          'bg-sky-500':
+            action.startsWith('update') ||
+            action.startsWith('edit') ||
+            action.startsWith('modify') ||
+            action.startsWith('change') ||
+            action.startsWith('toggle'),
           'bg-orange-500': action.startsWith('override'),
           'bg-green-500':
             action.startsWith('create') ||
