@@ -24,7 +24,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries
 
 	rg.POST("/login", handler.Login)
 	rg.POST("/logout", handler.Logout)
-	rg.POST("/register", handler.RegisterUser)
+	rg.POST("/register", Authenticate(), handler.RegisterUser)
 	rg.POST("/refresh", handler.RefreshToken)
 	rg.GET("/me", Authenticate(), handler.Me)
 	rg.POST("/forget-password", handler.ForgetPassword)

@@ -84,7 +84,7 @@ function RouteComponent() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell className="">{user.phone}</TableCell>
                       <TableCell className="">
-                        <StatusRender id={user.id} status={!user.blocked} />
+                        <StatusRender id={user.id} />
                       </TableCell>
                     </TableRow>
                   )
@@ -101,14 +101,9 @@ function RouteComponent() {
   )
 }
 
-export const StatusRender = ({
-  status,
-  id,
-}: {
-  status: boolean
-  id: number
-}) => {
+export const StatusRender = ({ id }: { id: number }) => {
   const { data: me } = query.currentUserQuery()
+  const { data: user } = query.userQuery(id)
   const { mutate, isPending, isSuccess, error } = query.toggleUserStatus(id)
 
   useEffect(() => {
@@ -127,24 +122,24 @@ export const StatusRender = ({
       className={cn(
         'flex items-center gap-2 py-0.5 px-3 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
         {
-          'bg-red-100': status == false,
-          'bg-green-100': status == true,
+          'bg-red-100': user?.blocked == true,
+          'bg-green-100': user?.blocked == false,
         },
       )}
     >
       <span
         className={cn('size-2 rounded-full animate-pulse', {
-          'bg-red-500': status == false,
-          'bg-green-500': status == true,
+          'bg-red-500': user?.blocked == true,
+          'bg-green-500': user?.blocked == false,
         })}
       />
       <span
         className={cn('mt-1', {
-          'text-red-500': status == false,
-          'text-green-500': status == true,
+          'text-red-500': user?.blocked == true,
+          'text-green-500': user?.blocked == false,
         })}
       >
-        {_.capitalize(status ? 'Active' : 'Blocked')}
+        {_.capitalize(user?.blocked ? 'Blocked' : 'Active')}
       </span>
     </button>
   )

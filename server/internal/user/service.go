@@ -116,7 +116,7 @@ func (s *Service) ToggleUserStatus(ctx context.Context, actorID, id int32) error
 				"blocked": account.Blocked,
 			},
 			"after": types.JSONB{
-				"blocked": account.Blocked,
+				"blocked": !account.Blocked,
 			},
 		},
 	})
