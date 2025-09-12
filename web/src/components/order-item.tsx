@@ -31,49 +31,50 @@ export const StatusRender = ({
       onClick={() => {
         let update = status
         switch (status) {
-          case 'Pending':
-            update = 'Processing'
+          case 'pending':
+            update = 'processing'
             break
-          case 'Processing':
-            update = 'Ready'
+          case 'processing':
+            update = 'ready'
             break
-          case 'Ready':
-            update = 'Delivered'
+          case 'ready':
+            update = 'delivered'
             break
-          case 'Delivered':
+          case 'delivered':
             break
         }
         mutate(update)
       }}
       disabled={
         isPending ||
-        status === 'Delivered' ||
-        (role != 'kitchen' && status !== 'Ready')
+        status === 'delivered' ||
+        (role != 'kitchen' && status !== 'ready') ||
+        (role != 'waiter' && status === 'ready')
       }
       className={cn(
         'flex items-center gap-2 py-1 pl-4 pr-5 rounded-full w-fit text-xs hover:cursor-pointer focus:cursor-pointer mx-auto',
         {
-          'bg-gray-100': status == 'Pending',
-          'bg-yellow-100': status == 'Processing',
-          'bg-sky-100': status == 'Ready',
-          'bg-green-100': status == 'Delivered',
+          'bg-gray-100': status == 'pending',
+          'bg-yellow-100': status == 'processing',
+          'bg-sky-100': status == 'ready',
+          'bg-green-100': status == 'delivered',
         },
       )}
     >
       <span
         className={cn('size-2 rounded-full animate-pulse', {
-          'bg-gray-500': status == 'Pending',
-          'bg-yellow-500': status == 'Processing',
-          'bg-sky-500': status == 'Ready',
-          'bg-green-500': status == 'Delivered',
+          'bg-gray-500': status == 'pending',
+          'bg-yellow-500': status == 'processing',
+          'bg-sky-500': status == 'ready',
+          'bg-green-500': status == 'delivered',
         })}
       />
       <span
         className={cn('mt-1', {
-          'text-gray-500': status == 'Pending',
-          'text-yellow-500': status == 'Processing',
-          'text-sky-500': status == 'Ready',
-          'text-green-500': status == 'Delivered',
+          'text-gray-500': status == 'pending',
+          'text-yellow-500': status == 'processing',
+          'text-sky-500': status == 'ready',
+          'text-green-500': status == 'delivered',
         })}
       >
         {_.capitalize(status)}

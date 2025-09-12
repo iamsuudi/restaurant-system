@@ -58,7 +58,7 @@ func (q *Queries) ClearOrderItems(ctx context.Context, orderID int32) error {
 const countListCompletedOrders = `-- name: CountListCompletedOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status = 'Delivered'
+WHERE "order".status = 'delivered'
 `
 
 func (q *Queries) CountListCompletedOrders(ctx context.Context) (int64, error) {
@@ -71,7 +71,7 @@ func (q *Queries) CountListCompletedOrders(ctx context.Context) (int64, error) {
 const countListOrders = `-- name: CountListOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status != 'Delivered'
+WHERE "order".status != 'delivered'
 `
 
 func (q *Queries) CountListOrders(ctx context.Context) (int64, error) {
@@ -230,7 +230,7 @@ const listCompletedOrders = `-- name: ListCompletedOrders :many
 SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status = 'Delivered'
+WHERE o.status = 'delivered'
 ORDER BY o.delivered_at DESC
 LIMIT $2 OFFSET $1
 `
@@ -288,7 +288,7 @@ const listOrders = `-- name: ListOrders :many
 SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status != 'Delivered'
+WHERE o.status != 'delivered'
 ORDER BY o.created_at ASC
 LIMIT $2 OFFSET $1
 `

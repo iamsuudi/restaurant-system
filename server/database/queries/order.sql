@@ -62,24 +62,24 @@ DELETE FROM order_item WHERE id = $1;
 SELECT o.*, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status != 'Delivered'
+WHERE o.status != 'delivered'
 ORDER BY o.created_at ASC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: CountListOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status != 'Delivered';
+WHERE "order".status != 'delivered';
 
 -- name: ListCompletedOrders :many
 SELECT o.*, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status = 'Delivered'
+WHERE o.status = 'delivered'
 ORDER BY o.delivered_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: CountListCompletedOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status = 'Delivered';
+WHERE "order".status = 'delivered';
