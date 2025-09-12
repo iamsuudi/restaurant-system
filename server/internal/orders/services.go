@@ -31,7 +31,7 @@ func (s *Service) CreateOrder(ctx context.Context, actorID int32, input types.Or
 	// 1. Create order
 	order, err := qtx.CreateOrder(ctx, repository.CreateOrderParams{
 		WaiterID:    &actorID,
-		Status:      "Pending",
+		Status:      "pending",
 		TableNumber: input.TableNumber,
 		Note:        input.Note,
 		TotalPrice:  input.Total,
@@ -86,11 +86,11 @@ func (s *Service) EditOrder(ctx context.Context, actorID int32, id int32, input 
 		return err
 	}
 
-	if order.Status != "Pending" {
+	if order.Status != "pending" {
 		return errors.New("Status must be pending")
 	}
 
-	status := "Pending"
+	status := "pending"
 
 	// 2. Edit order
 	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
@@ -160,7 +160,7 @@ func (s *Service) UpdateOrderStatus(ctx context.Context, actorID int32, id int32
 		return err
 	}
 
-	if before.Status == "Delivered" {
+	if before.Status == "delivered" {
 		return errors.New("Order is already delivered")
 	}
 

@@ -20,3 +20,18 @@ CREATE TABLE order_item (
     created_at       TIMESTAMP(3) NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMP(3) NOT NULL DEFAULT NOW()
 );
+
+CREATE OR REPLACE FUNCTION set_delivered_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'delivered' AND OLD.status IS DISTINCT FROM 'delivered' THEN
+    NEW.delivered_at := NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_delivered_at
+BEFORE UPDATE OF status ON "order"
+FOR EACH ROW
+EXECUTE FUNCTION set_delivered_at();

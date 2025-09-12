@@ -1,32 +1,19 @@
 import { format } from 'date-fns'
 import _ from 'lodash'
 import { ChefHat, User, UtensilsCrossed } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
 import type { Log } from '@/types/log'
 import { cn } from '@/lib/utils'
-import { query } from '@/hooks/query'
 
 export function TargetRenderer({ log }: { log: Log }) {
-  const { data: me } = query.currentUserQuery()
-
   switch (log.object_type) {
     case 'user':
       return (
         <p className="relative text-gray-500 flex items-center gap-1">
           <User className="size-3" />
           <span>user</span>
-          {me?.id === log.target_user_id ? (
-            <Link
-              to="/dashboard/profile"
-              className="ml-2 text-foreground hover:underline hover:text-primary"
-            >
-              {_.startCase(log.target_user_name)}
-            </Link>
-          ) : (
-            <p className="ml-2 text-foreground hover:underline hover:text-primary">
-              {_.startCase(log.target_user_name)}
-            </p>
-          )}
+          <p className="ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
+            {_.startCase(log.target_user_name)}
+          </p>
         </p>
       )
     case 'menu':
@@ -34,7 +21,7 @@ export function TargetRenderer({ log }: { log: Log }) {
         <p className="relative text-gray-500 flex items-center gap-1">
           <UtensilsCrossed className="size-3" />
           <span>menu</span>
-          <p className="ml-2 text-foreground hover:underline hover:text-primary">
+          <p className="ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
             {_.startCase(log.target_menu_name)}
           </p>
         </p>
@@ -44,7 +31,7 @@ export function TargetRenderer({ log }: { log: Log }) {
         <p className="relative text-gray-500 flex items-center gap-1">
           <ChefHat className="size-3" />
           <span>order</span>
-          <p className="italtic ml-2 text-foreground hover:underline hover:text-primary">
+          <p className="italtic ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
             #{log.target_order_id}
           </p>
         </p>

@@ -33,7 +33,6 @@ function RouteComponent() {
     currentPage,
     10,
   )
-  const { data: me } = query.currentUserQuery()
 
   return (
     <div className="w-full min-h-screen p-5">
@@ -74,19 +73,9 @@ function RouteComponent() {
                       <TableCell></TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col items-start">
-                          <Link
-                            className="hover:underline hover:text-primary"
-                            to={
-                              me?.id === log.actor_id
-                                ? '/dashboard/profile'
-                                : '/dashboard/users/$id'
-                            }
-                            params={{
-                              id: log.actor_id,
-                            }}
-                          >
+                          <p className="hover:underline hover:cursor-pointer hover:text-primary">
                             {log.actor_name}
-                          </Link>
+                          </p>
                           <RoleRender role={log.actor_role} />
                         </div>
                       </TableCell>
