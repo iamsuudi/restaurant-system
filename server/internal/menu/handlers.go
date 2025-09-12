@@ -37,13 +37,16 @@ func (h *Handler) CreateMenu(c *gin.Context) {
 		return
 	}
 
-	menu, err := h.service.CreateMenu(c, input, fileName)
+	raw, _ := c.Get("user_id")
+	actorID, _ := raw.(int32)
+
+	err = h.service.CreateMenu(c, actorID, input, fileName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, menu)
+	c.JSON(http.StatusCreated, gin.H{"message": "Menu created successfully"})
 }
 
 func (h *Handler) ListAllMenu(c *gin.Context) {
@@ -122,13 +125,16 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 		ptr = &fileName
 	}
 
-	menu, err := h.service.UpdateMenu(c, int32(id), input, ptr)
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.UpdateMenu(c, actorID, int32(id), input, ptr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, menu)
+	c.JSON(http.StatusOK, gin.H{"message": "menu updated successfully"})
 }
 
 func (h *Handler) DeleteMenu(c *gin.Context) {
@@ -138,8 +144,10 @@ func (h *Handler) DeleteMenu(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
 
-	err = h.service.DeleteMenu(c, int32(id))
+	err = h.service.DeleteMenu(c, actorID, int32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

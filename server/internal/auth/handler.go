@@ -81,7 +81,10 @@ func (h *Handler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	err := h.Service.RegisterUser(c.Request.Context(), input)
+	raw, _ := c.Get("user_id")
+	actorID, _ := raw.(int32)
+
+	err := h.Service.RegisterUser(c.Request.Context(), actorID, input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

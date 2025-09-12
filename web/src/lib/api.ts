@@ -1,3 +1,4 @@
+import { activity } from './http/activity'
 import { auth } from './http/auth'
 import { menu } from './http/menu'
 import { order } from './http/order'
@@ -8,4 +9,5 @@ export const api = {
   ...user,
   ...menu,
   ...order,
+  ...activity,
 }

@@ -133,30 +133,18 @@ export function CreateDialog() {
                 {(field) => (
                   <div>
                     {/* Render list */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 8,
-                      }}
-                    >
+                    <div className="flex flex-wrap gap-2">
                       {field.state.value?.map((lang, idx) => (
                         <div
                           key={`${lang}-${idx}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: '#f3f4f6',
-                            padding: '4px 8px',
-                            borderRadius: 4,
-                          }}
+                          className="flex items-center bg-secondary py-1 px-2 rounded"
                         >
                           <p className="text-xs mr-2">{lang}</p>
                           <button
                             type="button"
                             onClick={() => field.removeValue(idx)}
                             className="text-destructive"
-                            aria-label="Remove language"
+                            aria-label="Remove ingredient"
                           >
                             ✕
                           </button>

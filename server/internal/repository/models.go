@@ -6,6 +6,8 @@ package repository
 
 import (
 	"time"
+
+	types "restaurant-server/shared/types"
 )
 
 type Account struct {
@@ -16,6 +18,20 @@ type Account struct {
 	UserID       int32      `db:"user_id" json:"user_id"`
 	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 	DeletedAt    *time.Time `db:"deleted_at" json:"deleted_at"`
+}
+
+type ActivityLog struct {
+	ID             int32       `db:"id" json:"id"`
+	ActorID        int32       `db:"actor_id" json:"actor_id"`
+	TargetUserID   *int32      `db:"target_user_id" json:"target_user_id"`
+	TargetUserName *string     `db:"target_user_name" json:"target_user_name"`
+	TargetMenuID   *int32      `db:"target_menu_id" json:"target_menu_id"`
+	TargetMenuName *string     `db:"target_menu_name" json:"target_menu_name"`
+	TargetOrderID  *int32      `db:"target_order_id" json:"target_order_id"`
+	ActionType     string      `db:"action_type" json:"action_type"`
+	ObjectType     string      `db:"object_type" json:"object_type"`
+	Diff           types.JSONB `db:"diff" json:"diff"`
+	Ts             time.Time   `db:"ts" json:"ts"`
 }
 
 type MenuItem struct {

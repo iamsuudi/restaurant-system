@@ -139,23 +139,11 @@ export function EditDialog({
                 {(field) => (
                   <div>
                     {/* Render list */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 8,
-                      }}
-                    >
+                    <div className="flex flex-wrap gap-2">
                       {field.state.value?.map((item, idx) => (
                         <div
                           key={`${item}-${idx}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: '#f3f4f6',
-                            padding: '4px 8px',
-                            borderRadius: 4,
-                          }}
+                          className="flex items-center bg-secondary py-1 px-2 rounded"
                         >
                           <p className="text-xs mr-2">{item}</p>
                           <button

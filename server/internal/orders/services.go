@@ -19,7 +19,7 @@ func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
 	return &Service{db: dbConn, q: dbQueries}
 }
 
-func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.OrderPayload) error {
+func (s *Service) CreateOrder(ctx context.Context, actorID int32, input types.OrderPayload) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.O
 
 	// 1. Create order
 	order, err := qtx.CreateOrder(ctx, repository.CreateOrderParams{
-		WaiterID:    actorID,
+		WaiterID:    &actorID,
 		Status:      "Pending",
 		TableNumber: input.TableNumber,
 		Note:        input.Note,
@@ -55,23 +55,23 @@ func (s *Service) CreateOrder(ctx context.Context, actorID *int32, input types.O
 	}
 
 	// 3. Insert audit log
-	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
-	// 	ActorID:          actorID,
-	// 	TargetResidentID: &resident.ID,
-	// 	ActionType:       "CREATE_RESIDENT",
-	// 	ObjectType:       "resident",
-	// 	Diff: map[string]any{
-	// 		"after": resident,
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:       actorID,
+		ObjectType:    "order",
+		ActionType:    "CREATE_ORDER",
+		TargetOrderID: &order.ID,
+		Diff: map[string]any{
+			"after": order,
+		},
+	})
+	if err != nil {
+		return err
+	}
 
 	return tx.Commit(ctx)
 }
 
-func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input types.OrderEditPayload) error {
+func (s *Service) EditOrder(ctx context.Context, actorID int32, id int32, input types.OrderEditPayload) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -93,9 +93,9 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 	status := "Pending"
 
 	// 2. Edit order
-	_, err = qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
+	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
 		ID:          order.ID,
-		WaiterID:    actorID,
+		WaiterID:    &actorID,
 		Status:      &status,
 		Note:        input.Note,
 		TableNumber: input.TableNumber,
@@ -128,23 +128,24 @@ func (s *Service) EditOrder(ctx context.Context, actorID *int32, id int32, input
 	}
 
 	// 4. Insert audit log
-	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
-	// 	ActorID:          actorID,
-	// 	TargetResidentID: &resident.ID,
-	// 	ActionType:       "CREATE_RESIDENT",
-	// 	ObjectType:       "resident",
-	// 	Diff: map[string]any{
-	// 		"after": resident,
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:       actorID,
+		ObjectType:    "order",
+		ActionType:    "UPDATE_ORDER",
+		TargetOrderID: &order.ID,
+		Diff: map[string]any{
+			"before": order,
+			"after":  after,
+		},
+	})
+	if err != nil {
+		return err
+	}
 
 	return tx.Commit(ctx)
 }
 
-func (s *Service) UpdateOrderStatus(ctx context.Context, actorID *int32, id int32, status string) error {
+func (s *Service) UpdateOrderStatus(ctx context.Context, actorID int32, id int32, status string) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -154,19 +155,19 @@ func (s *Service) UpdateOrderStatus(ctx context.Context, actorID *int32, id int3
 	qtx := s.q.WithTx(tx)
 
 	// 1. Get order
-	order, err := qtx.GetOrder(ctx, id)
+	before, err := qtx.GetOrder(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	if order.Status == "Delivered" {
+	if before.Status == "Delivered" {
 		return errors.New("Order is already delivered")
 	}
 
 	// 2. Edit order status
-	_, err = qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
-		ID:       order.ID,
-		WaiterID: actorID,
+	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
+		ID:       before.ID,
+		WaiterID: &actorID,
 		Status:   &status,
 	})
 	if err != nil {
@@ -174,18 +175,19 @@ func (s *Service) UpdateOrderStatus(ctx context.Context, actorID *int32, id int3
 	}
 
 	// 3. Insert audit log
-	// err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
-	// 	ActorID:          actorID,
-	// 	TargetResidentID: &resident.ID,
-	// 	ActionType:       "CREATE_RESIDENT",
-	// 	ObjectType:       "resident",
-	// 	Diff: map[string]any{
-	// 		"after": resident,
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:       actorID,
+		ObjectType:    "order",
+		ActionType:    "UPDATE_ORDER_STATUS",
+		TargetOrderID: &id,
+		Diff: map[string]any{
+			"before": before,
+			"after":  after,
+		},
+	})
+	if err != nil {
+		return err
+	}
 
 	return tx.Commit(ctx)
 }
@@ -232,6 +234,39 @@ func (s *Service) ListCompletedOrders(ctx context.Context, limit, offset int) (i
 	return count, orders, nil
 }
 
-func (s *Service) DeleteOrder(ctx context.Context, id int32) error {
-	return s.q.DeleteOrder(ctx, id)
+func (s *Service) DeleteOrder(ctx context.Context, actorID, id int32) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// 1. Get order
+	before, err := qtx.GetOrder(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 2. DeleteOrder
+	err = qtx.DeleteOrder(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 3. Log event
+	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:    actorID,
+		ObjectType: "order",
+		ActionType: "DELETE_ORDER",
+		Diff: map[string]any{
+			"before": before,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

@@ -29,7 +29,7 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	err := h.service.CreateOrder(c, &actorID, input)
+	err := h.service.CreateOrder(c, actorID, input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -108,7 +108,7 @@ func (h *Handler) UpdateOrder(c *gin.Context) {
 	ra, _ := c.Get("user_id")
 	actorID, _ := ra.(int32)
 
-	err = h.service.EditOrder(c, &actorID, int32(id), input)
+	err = h.service.EditOrder(c, actorID, int32(id), input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -136,7 +136,7 @@ func (h *Handler) UpdateOrderStatus(c *gin.Context) {
 	ra, _ := c.Get("user_id")
 	actorID, _ := ra.(int32)
 
-	err = h.service.UpdateOrderStatus(c, &actorID, int32(id), input.Status)
+	err = h.service.UpdateOrderStatus(c, actorID, int32(id), input.Status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -153,7 +153,10 @@ func (h *Handler) DeleteOrder(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteOrder(c, int32(id))
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.DeleteOrder(c, actorID, int32(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -158,8 +158,8 @@ const data = {
       role: ['admin'],
     },
     {
-      name: 'Analytics',
-      url: '/dashboard/analytics',
+      name: 'Activity',
+      url: '/dashboard/activity',
       icon: TrendingUp,
       role: ['admin'],
     },

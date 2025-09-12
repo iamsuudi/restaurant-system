@@ -18,8 +18,17 @@ func NewService(dbConn *pgxpool.Pool, dbQueries *repository.Queries) *Service {
 	return &Service{db: dbConn, q: dbQueries}
 }
 
-func (s *Service) CreateMenu(ctx context.Context, input types.MenuPayload, pic string) (repository.MenuItem, error) {
-	return s.q.CreateMenuItem(ctx, repository.CreateMenuItemParams{
+func (s *Service) CreateMenu(ctx context.Context, actorID int32, input types.MenuPayload, pic string) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// 1. Create menu item
+	menu, err := qtx.CreateMenuItem(ctx, repository.CreateMenuItemParams{
 		Name:        input.Name,
 		Price:       input.Price,
 		Picture:     pic,
@@ -27,6 +36,25 @@ func (s *Service) CreateMenu(ctx context.Context, input types.MenuPayload, pic s
 		Description: &input.Description,
 		Ingredients: input.Ingredients,
 	})
+	if err != nil {
+		return err
+	}
+
+	// 2. Save activity log
+	if err := qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:        actorID,
+		ObjectType:     "menu",
+		ActionType:     "CREATE_MENU",
+		TargetMenuID:   &menu.ID,
+		TargetMenuName: &menu.Name,
+		Diff: types.JSONB{
+			"after": menu,
+		},
+	}); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *Service) ListAllMenu(ctx context.Context) ([]repository.MenuItem, error) {
@@ -41,8 +69,23 @@ func (s *Service) GetMenuByID(ctx context.Context, id int32) (repository.MenuIte
 	return s.q.GetMenuItem(ctx, id)
 }
 
-func (s *Service) UpdateMenu(ctx context.Context, id int32, input types.MenuEditPayload, pic *string) (repository.MenuItem, error) {
-	return s.q.UpdateMenuItem(ctx, repository.UpdateMenuItemParams{
+func (s *Service) UpdateMenu(ctx context.Context, actorID, id int32, input types.MenuEditPayload, pic *string) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// 1. Before
+	before, err := qtx.GetMenuItem(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 2. After
+	after, err := qtx.UpdateMenuItem(ctx, repository.UpdateMenuItemParams{
 		ID:          id,
 		Name:        input.Name,
 		Price:       input.Price,
@@ -51,8 +94,61 @@ func (s *Service) UpdateMenu(ctx context.Context, id int32, input types.MenuEdit
 		Status:      input.Status,
 		Picture:     pic,
 	})
+	if err != nil {
+		return err
+	}
+
+	// 3. Save activity log
+	if err := qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:        actorID,
+		ObjectType:     "menu",
+		ActionType:     "UPDATE_MENU",
+		TargetMenuID:   &id,
+		TargetMenuName: &before.Name,
+		Diff: types.JSONB{
+			"before": before,
+			"after":  after,
+		},
+	}); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
-func (s *Service) DeleteMenu(ctx context.Context, id int32) error {
-	return s.q.DeleteMenuItem(ctx, id)
+func (s *Service) DeleteMenu(ctx context.Context, actorID, id int32) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	// 1. Before
+	before, err := qtx.GetMenuItem(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 2. After
+	err = qtx.DeleteMenuItem(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 3. Save activity log
+	if err := qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:        actorID,
+		ObjectType:     "menu",
+		ActionType:     "DELETE_MENU",
+		TargetMenuName: &before.Name,
+		Diff: types.JSONB{
+			"before": before,
+		},
+	}); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

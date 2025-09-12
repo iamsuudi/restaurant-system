@@ -79,7 +79,10 @@ func (h *Handler) UpdateUserInfo(c *gin.Context) {
 		picture = &filename
 	}
 
-	err = h.service.UpdateUserInfo(c, int32(targetId), input, picture)
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.UpdateUserInfo(c, actorID, int32(targetId), input, picture)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -96,7 +99,10 @@ func (h *Handler) ToggleUserStatus(c *gin.Context) {
 		return
 	}
 
-	err = h.service.ToggleUserStatus(c, int32(targetId))
+	ra, _ := c.Get("user_id")
+	actorID, _ := ra.(int32)
+
+	err = h.service.ToggleUserStatus(c, actorID, int32(targetId))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

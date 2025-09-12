@@ -1,3 +1,4 @@
+import { activity } from './queries/activity'
 import { auth } from './queries/auth'
 import { menu } from './queries/menu'
 import { order } from './queries/order'
@@ -8,6 +9,7 @@ export const query = {
   ...auth,
   ...menu,
   ...order,
+  ...activity,
 }
 
 export { currentUserQueryOptions } from './queries/auth'
