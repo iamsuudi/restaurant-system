@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"restaurant-server/database"
+	"restaurant-server/internal/activity"
 	"restaurant-server/internal/auth"
 	"restaurant-server/internal/menu"
 	"restaurant-server/internal/orders"
@@ -44,6 +45,7 @@ func main() {
 	orders.RegisterRoutes(r.Group("/api"), db, q)
 	menu.RegisterRoutes(r.Group("/api"), db, q)
 	user.RegisterRoutes(r.Group("/api"), db, q)
+	activity.RegisterRoutes(r.Group("/api"), db, q)
 
 	// WebSocket endpoints
 	wsGroup := r.Group("/ws")

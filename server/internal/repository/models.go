@@ -18,6 +18,18 @@ type Account struct {
 	DeletedAt    *time.Time `db:"deleted_at" json:"deleted_at"`
 }
 
+type ActivityLog struct {
+	ID            int32     `db:"id" json:"id"`
+	ActorID       int32     `db:"actor_id" json:"actor_id"`
+	TargetUserID  *int32    `db:"target_user_id" json:"target_user_id"`
+	TargetMenuID  *int32    `db:"target_menu_id" json:"target_menu_id"`
+	TargetOrderID *int32    `db:"target_order_id" json:"target_order_id"`
+	ActionType    string    `db:"action_type" json:"action_type"`
+	ObjectType    string    `db:"object_type" json:"object_type"`
+	Diff          []byte    `db:"diff" json:"diff"`
+	Ts            time.Time `db:"ts" json:"ts"`
+}
+
 type MenuItem struct {
 	ID          int32     `db:"id" json:"id"`
 	Name        string    `db:"name" json:"name"`

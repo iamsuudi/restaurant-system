@@ -12,6 +12,7 @@ type Querier interface {
 	AddOrderItem(ctx context.Context, arg AddOrderItemParams) (OrderItem, error)
 	BlockAccount(ctx context.Context, userID int32) error
 	ClearOrderItems(ctx context.Context, orderID int32) error
+	CountListAuditLogs(ctx context.Context) (int64, error)
 	CountListCompletedOrders(ctx context.Context) (int64, error)
 	CountListOrders(ctx context.Context) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
@@ -27,6 +28,7 @@ type Querier interface {
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRefreshTokensByUser(ctx context.Context, userID int32) error
 	GetAccount(ctx context.Context, userID int32) (Account, error)
+	GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, error)
 	GetMenuItem(ctx context.Context, id int32) (MenuItem, error)
 	GetOrder(ctx context.Context, id int32) (GetOrderRow, error)
 	GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderItemsRow, error)
@@ -35,7 +37,9 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int32) (GetUserByIDRow, error)
 	GetUserRole(ctx context.Context, id int32) (string, error)
 	GetValidPasswordResetToken(ctx context.Context, token string) (PasswordResetTokens, error)
+	InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) error
 	ListActiveMenuItems(ctx context.Context) ([]MenuItem, error)
+	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]ListAuditLogsRow, error)
 	ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error)
 	ListMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error)
