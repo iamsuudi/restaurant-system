@@ -7,6 +7,9 @@ package repository
 
 import (
 	"context"
+	"time"
+
+	types "restaurant-server/shared/types"
 )
 
 const countListAuditLogs = `-- name: CountListAuditLogs :one
@@ -23,82 +26,45 @@ func (q *Queries) CountListAuditLogs(ctx context.Context) (int64, error) {
 }
 
 const getAuditLog = `-- name: GetAuditLog :one
-SELECT log.id, log.actor_id, log.target_user_id, log.target_menu_id, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.id, au.name, au.email, au.phone, au.role, au.picture, au.created_at, au.deleted_at, tu.id, tu.name, tu.email, tu.phone, tu.role, tu.picture, tu.created_at, tu.deleted_at,
-    tu.id, tu.name, tu.email, tu.phone, tu.role, tu.picture, tu.created_at, tu.deleted_at, mi.id, mi.name, mi.description, mi.price, mi.picture, mi.category, mi.status, mi.ingredients, mi.created_at, mi.updated_at, o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at
+SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
-LEFT JOIN menu_item mi ON mi.id = log.target_menu_item_id
-LEFT JOIN "order" o ON o.id = log.target_order_id
-LEFT JOIN "user" tu ON tu.id = log.target_user_id
-LEFT JOIN "order" o ON o.id = log.target_order_id
 WHERE log.id = $1
 `
 
 type GetAuditLogRow struct {
-	ActivityLog ActivityLog `db:"activity_log" json:"activity_log"`
-	User        User        `db:"user" json:"user"`
-	User_2      User        `db:"user_2" json:"user_2"`
-	User_3      User        `db:"user_3" json:"user_3"`
-	MenuItem    MenuItem    `db:"menu_item" json:"menu_item"`
-	Order       Order       `db:"order" json:"order"`
+	ID             int32       `db:"id" json:"id"`
+	ActorID        int32       `db:"actor_id" json:"actor_id"`
+	TargetUserID   *int32      `db:"target_user_id" json:"target_user_id"`
+	TargetUserName *string     `db:"target_user_name" json:"target_user_name"`
+	TargetMenuID   *int32      `db:"target_menu_id" json:"target_menu_id"`
+	TargetMenuName *string     `db:"target_menu_name" json:"target_menu_name"`
+	TargetOrderID  *int32      `db:"target_order_id" json:"target_order_id"`
+	ActionType     string      `db:"action_type" json:"action_type"`
+	ObjectType     string      `db:"object_type" json:"object_type"`
+	Diff           types.JSONB `db:"diff" json:"diff"`
+	Ts             time.Time   `db:"ts" json:"ts"`
+	ActorName      string      `db:"actor_name" json:"actor_name"`
+	ActorRole      string      `db:"actor_role" json:"actor_role"`
 }
 
 func (q *Queries) GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, error) {
 	row := q.db.QueryRow(ctx, getAuditLog, id)
 	var i GetAuditLogRow
 	err := row.Scan(
-		&i.ActivityLog.ID,
-		&i.ActivityLog.ActorID,
-		&i.ActivityLog.TargetUserID,
-		&i.ActivityLog.TargetMenuID,
-		&i.ActivityLog.TargetOrderID,
-		&i.ActivityLog.ActionType,
-		&i.ActivityLog.ObjectType,
-		&i.ActivityLog.Diff,
-		&i.ActivityLog.Ts,
-		&i.User.ID,
-		&i.User.Name,
-		&i.User.Email,
-		&i.User.Phone,
-		&i.User.Role,
-		&i.User.Picture,
-		&i.User.CreatedAt,
-		&i.User.DeletedAt,
-		&i.User_2.ID,
-		&i.User_2.Name,
-		&i.User_2.Email,
-		&i.User_2.Phone,
-		&i.User_2.Role,
-		&i.User_2.Picture,
-		&i.User_2.CreatedAt,
-		&i.User_2.DeletedAt,
-		&i.User_3.ID,
-		&i.User_3.Name,
-		&i.User_3.Email,
-		&i.User_3.Phone,
-		&i.User_3.Role,
-		&i.User_3.Picture,
-		&i.User_3.CreatedAt,
-		&i.User_3.DeletedAt,
-		&i.MenuItem.ID,
-		&i.MenuItem.Name,
-		&i.MenuItem.Description,
-		&i.MenuItem.Price,
-		&i.MenuItem.Picture,
-		&i.MenuItem.Category,
-		&i.MenuItem.Status,
-		&i.MenuItem.Ingredients,
-		&i.MenuItem.CreatedAt,
-		&i.MenuItem.UpdatedAt,
-		&i.Order.ID,
-		&i.Order.WaiterID,
-		&i.Order.Status,
-		&i.Order.TableNumber,
-		&i.Order.Note,
-		&i.Order.TotalPrice,
-		&i.Order.CreatedAt,
-		&i.Order.DeliveredAt,
-		&i.Order.UpdatedAt,
+		&i.ID,
+		&i.ActorID,
+		&i.TargetUserID,
+		&i.TargetUserName,
+		&i.TargetMenuID,
+		&i.TargetMenuName,
+		&i.TargetOrderID,
+		&i.ActionType,
+		&i.ObjectType,
+		&i.Diff,
+		&i.Ts,
+		&i.ActorName,
+		&i.ActorRole,
 	)
 	return i, err
 }
@@ -106,19 +72,22 @@ func (q *Queries) GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, er
 const insertAuditLog = `-- name: InsertAuditLog :exec
 INSERT INTO activity_log (
     actor_id, target_user_id, target_menu_id, diff,
-    action_type, object_type, target_order_id
+    action_type, object_type, target_order_id,
+    target_user_name, target_menu_name
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type InsertAuditLogParams struct {
-	ActorID       int32  `db:"actor_id" json:"actor_id"`
-	TargetUserID  *int32 `db:"target_user_id" json:"target_user_id"`
-	TargetMenuID  *int32 `db:"target_menu_id" json:"target_menu_id"`
-	Diff          []byte `db:"diff" json:"diff"`
-	ActionType    string `db:"action_type" json:"action_type"`
-	ObjectType    string `db:"object_type" json:"object_type"`
-	TargetOrderID *int32 `db:"target_order_id" json:"target_order_id"`
+	ActorID        int32       `db:"actor_id" json:"actor_id"`
+	TargetUserID   *int32      `db:"target_user_id" json:"target_user_id"`
+	TargetMenuID   *int32      `db:"target_menu_id" json:"target_menu_id"`
+	Diff           types.JSONB `db:"diff" json:"diff"`
+	ActionType     string      `db:"action_type" json:"action_type"`
+	ObjectType     string      `db:"object_type" json:"object_type"`
+	TargetOrderID  *int32      `db:"target_order_id" json:"target_order_id"`
+	TargetUserName *string     `db:"target_user_name" json:"target_user_name"`
+	TargetMenuName *string     `db:"target_menu_name" json:"target_menu_name"`
 }
 
 func (q *Queries) InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) error {
@@ -130,19 +99,16 @@ func (q *Queries) InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) 
 		arg.ActionType,
 		arg.ObjectType,
 		arg.TargetOrderID,
+		arg.TargetUserName,
+		arg.TargetMenuName,
 	)
 	return err
 }
 
 const listAuditLogs = `-- name: ListAuditLogs :many
-SELECT log.id, log.actor_id, log.target_user_id, log.target_menu_id, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.id, au.name, au.email, au.phone, au.role, au.picture, au.created_at, au.deleted_at, tu.id, tu.name, tu.email, tu.phone, tu.role, tu.picture, tu.created_at, tu.deleted_at,
-    tu.id, tu.name, tu.email, tu.phone, tu.role, tu.picture, tu.created_at, tu.deleted_at, mi.id, mi.name, mi.description, mi.price, mi.picture, mi.category, mi.status, mi.ingredients, mi.created_at, mi.updated_at, o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at
+SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
-LEFT JOIN menu_item mi ON mi.id = log.target_menu_item_id
-LEFT JOIN "order" o ON o.id = log.target_order_id
-LEFT JOIN "user" tu ON tu.id = log.target_user_id
-LEFT JOIN "order" o ON o.id = log.target_order_id
 ORDER BY log.ts DESC
 LIMIT $2 OFFSET $1
 `
@@ -153,12 +119,19 @@ type ListAuditLogsParams struct {
 }
 
 type ListAuditLogsRow struct {
-	ActivityLog ActivityLog `db:"activity_log" json:"activity_log"`
-	User        User        `db:"user" json:"user"`
-	User_2      User        `db:"user_2" json:"user_2"`
-	User_3      User        `db:"user_3" json:"user_3"`
-	MenuItem    MenuItem    `db:"menu_item" json:"menu_item"`
-	Order       Order       `db:"order" json:"order"`
+	ID             int32       `db:"id" json:"id"`
+	ActorID        int32       `db:"actor_id" json:"actor_id"`
+	TargetUserID   *int32      `db:"target_user_id" json:"target_user_id"`
+	TargetUserName *string     `db:"target_user_name" json:"target_user_name"`
+	TargetMenuID   *int32      `db:"target_menu_id" json:"target_menu_id"`
+	TargetMenuName *string     `db:"target_menu_name" json:"target_menu_name"`
+	TargetOrderID  *int32      `db:"target_order_id" json:"target_order_id"`
+	ActionType     string      `db:"action_type" json:"action_type"`
+	ObjectType     string      `db:"object_type" json:"object_type"`
+	Diff           types.JSONB `db:"diff" json:"diff"`
+	Ts             time.Time   `db:"ts" json:"ts"`
+	ActorName      string      `db:"actor_name" json:"actor_name"`
+	ActorRole      string      `db:"actor_role" json:"actor_role"`
 }
 
 func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]ListAuditLogsRow, error) {
@@ -171,58 +144,19 @@ func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([
 	for rows.Next() {
 		var i ListAuditLogsRow
 		if err := rows.Scan(
-			&i.ActivityLog.ID,
-			&i.ActivityLog.ActorID,
-			&i.ActivityLog.TargetUserID,
-			&i.ActivityLog.TargetMenuID,
-			&i.ActivityLog.TargetOrderID,
-			&i.ActivityLog.ActionType,
-			&i.ActivityLog.ObjectType,
-			&i.ActivityLog.Diff,
-			&i.ActivityLog.Ts,
-			&i.User.ID,
-			&i.User.Name,
-			&i.User.Email,
-			&i.User.Phone,
-			&i.User.Role,
-			&i.User.Picture,
-			&i.User.CreatedAt,
-			&i.User.DeletedAt,
-			&i.User_2.ID,
-			&i.User_2.Name,
-			&i.User_2.Email,
-			&i.User_2.Phone,
-			&i.User_2.Role,
-			&i.User_2.Picture,
-			&i.User_2.CreatedAt,
-			&i.User_2.DeletedAt,
-			&i.User_3.ID,
-			&i.User_3.Name,
-			&i.User_3.Email,
-			&i.User_3.Phone,
-			&i.User_3.Role,
-			&i.User_3.Picture,
-			&i.User_3.CreatedAt,
-			&i.User_3.DeletedAt,
-			&i.MenuItem.ID,
-			&i.MenuItem.Name,
-			&i.MenuItem.Description,
-			&i.MenuItem.Price,
-			&i.MenuItem.Picture,
-			&i.MenuItem.Category,
-			&i.MenuItem.Status,
-			&i.MenuItem.Ingredients,
-			&i.MenuItem.CreatedAt,
-			&i.MenuItem.UpdatedAt,
-			&i.Order.ID,
-			&i.Order.WaiterID,
-			&i.Order.Status,
-			&i.Order.TableNumber,
-			&i.Order.Note,
-			&i.Order.TotalPrice,
-			&i.Order.CreatedAt,
-			&i.Order.DeliveredAt,
-			&i.Order.UpdatedAt,
+			&i.ID,
+			&i.ActorID,
+			&i.TargetUserID,
+			&i.TargetUserName,
+			&i.TargetMenuID,
+			&i.TargetMenuName,
+			&i.TargetOrderID,
+			&i.ActionType,
+			&i.ObjectType,
+			&i.Diff,
+			&i.Ts,
+			&i.ActorName,
+			&i.ActorRole,
 		); err != nil {
 			return nil, err
 		}

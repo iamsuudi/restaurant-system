@@ -50,7 +50,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*re
 }
 
 // RegisterUser creates a new user account with hashed password.
-func (s *Service) RegisterUser(ctx context.Context, input types.UserPayload) error {
+func (s *Service) RegisterUser(ctx context.Context, actorID int32, input types.UserPayload) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -86,6 +86,17 @@ func (s *Service) RegisterUser(ctx context.Context, input types.UserPayload) err
 	if err != nil {
 		return err
 	}
+
+	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
+		ActorID:        actorID,
+		ObjectType:     "user",
+		ActionType:     "CREATE_USER",
+		TargetUserID:   &user.ID,
+		TargetUserName: &user.Name,
+		Diff: types.JSONB{
+			"after": user,
+		},
+	})
 
 	return tx.Commit(ctx)
 }

@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"restaurant-server/internal/repository"
-	"restaurant-server/shared/email"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"restaurant-server/internal/repository"
+	"restaurant-server/shared/email"
 )
 
 type loginReq struct {
