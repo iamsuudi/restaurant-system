@@ -8,15 +8,18 @@ export const order = {
       body: JSON.stringify(payload),
     })
   },
-  async listOrders(page: number, limit: number) {
-    const data = await apiFetch(`/api/orders?page=${page}&rows=${limit}`, {
-      method: 'GET',
-    })
+  async listOrders(page: number, limit: number, target = 'pending') {
+    const data = await apiFetch(
+      `/api/orders/list/${target}?status=completed&page=${page}&rows=${limit}`,
+      {
+        method: 'GET',
+      },
+    )
     return data as { orders: Array<Order>; count: number }
   },
-  async listCompletedOrders(page: number, limit: number) {
+  async listCompletedOrders(page: number, limit: number, target = 'delivered') {
     const data = await apiFetch(
-      `/api/orders?status=completed&page=${page}&rows=${limit}`,
+      `/api/orders/list/${target}?status=completed&page=${page}&rows=${limit}`,
       {
         method: 'GET',
       },

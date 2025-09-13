@@ -200,13 +200,13 @@ func (s *Service) GetOrderItems(ctx context.Context, id int32) ([]repository.Get
 	return s.q.GetOrderItems(ctx, id)
 }
 
-func (s *Service) ListOrders(ctx context.Context, limit, offset int) (int64, []repository.ListOrdersRow, error) {
-	count, err := s.q.CountListOrders(ctx)
+func (s *Service) ListPendingOrders(ctx context.Context, limit, offset int) (int64, []repository.ListPendingOrdersRow, error) {
+	count, err := s.q.CountPendingOrders(ctx)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	orders, err := s.q.ListOrders(ctx, repository.ListOrdersParams{
+	orders, err := s.q.ListPendingOrders(ctx, repository.ListPendingOrdersParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	})
@@ -217,13 +217,64 @@ func (s *Service) ListOrders(ctx context.Context, limit, offset int) (int64, []r
 	return count, orders, nil
 }
 
-func (s *Service) ListCompletedOrders(ctx context.Context, limit, offset int) (int64, []repository.ListCompletedOrdersRow, error) {
-	count, err := s.q.CountListCompletedOrders(ctx)
+func (s *Service) ListProcessingOrders(ctx context.Context, limit, offset int) (int64, []repository.ListProcessingOrdersRow, error) {
+	count, err := s.q.CountProcessingOrders(ctx)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	orders, err := s.q.ListCompletedOrders(ctx, repository.ListCompletedOrdersParams{
+	orders, err := s.q.ListProcessingOrders(ctx, repository.ListProcessingOrdersParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return count, orders, nil
+}
+
+func (s *Service) ListReadyOrders(ctx context.Context, limit, offset int) (int64, []repository.ListReadyOrdersRow, error) {
+	count, err := s.q.CountReadyOrders(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	orders, err := s.q.ListReadyOrders(ctx, repository.ListReadyOrdersParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return count, orders, nil
+}
+
+func (s *Service) ListDeliveredOrders(ctx context.Context, limit, offset int) (int64, []repository.ListDeliveredOrdersRow, error) {
+	count, err := s.q.CountDeliveredOrders(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	orders, err := s.q.ListDeliveredOrders(ctx, repository.ListDeliveredOrdersParams{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return count, orders, nil
+}
+
+func (s *Service) ListCancelledOrders(ctx context.Context, limit, offset int) (int64, []repository.ListCancelledOrdersRow, error) {
+	count, err := s.q.CountCancelledOrders(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	orders, err := s.q.ListCancelledOrders(ctx, repository.ListCancelledOrdersParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	})
@@ -249,19 +300,39 @@ func (s *Service) DeleteOrder(ctx context.Context, actorID, id int32) error {
 		return err
 	}
 
-	// 2. DeleteOrder
-	err = qtx.DeleteOrder(ctx, id)
+	if before.Status == "delivered" {
+		return errors.New("Order is already delivered")
+	}
+
+	status := "cancelled"
+
+	// 2. Edit order status
+	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
+		ID:       before.ID,
+		WaiterID: &actorID,
+		Status:   &status,
+	})
 	if err != nil {
 		return err
 	}
 
-	// 3. Log event
+	// 3. Insert audit log
 	err = qtx.InsertAuditLog(ctx, repository.InsertAuditLogParams{
-		ActorID:    actorID,
-		ObjectType: "order",
-		ActionType: "DELETE_ORDER",
+		ActorID:       actorID,
+		ObjectType:    "order",
+		ActionType:    "DELETE_ORDER",
+		TargetOrderID: &id,
 		Diff: map[string]any{
-			"before": before,
+			"before": map[string]interface{}{
+				"id":       before.ID,
+				"waiterID": before.WaiterID,
+				"status":   before.Status,
+			},
+			"after": map[string]interface{}{
+				"id":       after.ID,
+				"waiterID": after.WaiterID,
+				"status":   after.Status,
+			},
 		},
 	})
 	if err != nil {

@@ -58,20 +58,46 @@ RETURNING *;
 -- name: DeleteOrderItem :exec
 DELETE FROM order_item WHERE id = $1;
 
--- name: ListOrders :many
+-- name: ListPendingOrders :many
 SELECT o.*, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status != 'delivered'
+WHERE o.status = 'pending'
 ORDER BY o.created_at ASC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
--- name: CountListOrders :one
+-- name: CountPendingOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status != 'delivered';
+WHERE "order".status = 'pending';
 
--- name: ListCompletedOrders :many
+-- name: ListProcessingOrders :many
+SELECT o.*, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'processing'
+ORDER BY o.created_at ASC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountProcessingOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'processing';
+
+-- name: ListReadyOrders :many
+SELECT o.*, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'ready'
+ORDER BY o.created_at ASC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountReadyOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'ready';
+
+-- name: ListDeliveredOrders :many
 SELECT o.*, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
@@ -79,7 +105,25 @@ WHERE o.status = 'delivered'
 ORDER BY o.delivered_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
--- name: CountListCompletedOrders :one
+-- name: CountDeliveredOrders :one
 SELECT COUNT(*)
 FROM "order"
 WHERE "order".status = 'delivered';
+
+-- name: ListCancelledOrders :many
+SELECT o.*, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'cancelled'
+ORDER BY o.created_at ASC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountCancelledOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'cancelled';
+
+-- name: CountActiveOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status IN ('pending', 'processing', 'ready');

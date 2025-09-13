@@ -9,14 +9,16 @@ export const order = {
     return useMutation({
       mutationFn: (data: OrderPayload) => api.createOrder(data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'pending'),
+        })
       },
     })
   },
-  listOrders(page = 1, limit = 10) {
+  listOrders(page = 1, limit = 10, target = 'pending') {
     return useQuery({
-      queryKey: queryKeys.orders(page, limit),
-      queryFn: () => api.listOrders(page, limit),
+      queryKey: queryKeys.orders(page, limit, target),
+      queryFn: () => api.listOrders(page, limit, target),
     })
   },
   listCompletedOrders(page = 1, limit = 10) {
@@ -41,7 +43,9 @@ export const order = {
     return useMutation({
       mutationFn: (data: OrderPayload) => api.updateOrder(id, data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'pending'),
+        })
         queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
       },
     })
@@ -50,7 +54,18 @@ export const order = {
     return useMutation({
       mutationFn: (status: string) => api.updateOrderStatus(id, status),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'pending'),
+        })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'processing'),
+        })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'ready'),
+        })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'delivered'),
+        })
         queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
       },
     })
@@ -59,7 +74,12 @@ export const order = {
     return useMutation({
       mutationFn: () => api.deleteOrder(id),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.orders(1, 10) })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'pending'),
+        })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.orders(1, 10, 'cancelled'),
+        })
         queryClient.invalidateQueries({ queryKey: queryKeys.order(id) })
       },
     })

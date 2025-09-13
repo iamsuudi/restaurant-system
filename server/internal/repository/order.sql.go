@@ -55,27 +55,79 @@ func (q *Queries) ClearOrderItems(ctx context.Context, orderID int32) error {
 	return err
 }
 
-const countListCompletedOrders = `-- name: CountListCompletedOrders :one
+const countActiveOrders = `-- name: CountActiveOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status = 'delivered'
+WHERE "order".status IN ('pending', 'processing', 'ready')
 `
 
-func (q *Queries) CountListCompletedOrders(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countListCompletedOrders)
+func (q *Queries) CountActiveOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveOrders)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
 }
 
-const countListOrders = `-- name: CountListOrders :one
+const countCancelledOrders = `-- name: CountCancelledOrders :one
 SELECT COUNT(*)
 FROM "order"
-WHERE "order".status != 'delivered'
+WHERE "order".status = 'cancelled'
 `
 
-func (q *Queries) CountListOrders(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countListOrders)
+func (q *Queries) CountCancelledOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countCancelledOrders)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countDeliveredOrders = `-- name: CountDeliveredOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'delivered'
+`
+
+func (q *Queries) CountDeliveredOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countDeliveredOrders)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countPendingOrders = `-- name: CountPendingOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'pending'
+`
+
+func (q *Queries) CountPendingOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countPendingOrders)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countProcessingOrders = `-- name: CountProcessingOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'processing'
+`
+
+func (q *Queries) CountProcessingOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countProcessingOrders)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countReadyOrders = `-- name: CountReadyOrders :one
+SELECT COUNT(*)
+FROM "order"
+WHERE "order".status = 'ready'
+`
+
+func (q *Queries) CountReadyOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countReadyOrders)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -226,21 +278,21 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID int32) ([]GetOrderI
 	return items, nil
 }
 
-const listCompletedOrders = `-- name: ListCompletedOrders :many
+const listCancelledOrders = `-- name: ListCancelledOrders :many
 SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status = 'delivered'
-ORDER BY o.delivered_at DESC
+WHERE o.status = 'cancelled'
+ORDER BY o.created_at ASC
 LIMIT $2 OFFSET $1
 `
 
-type ListCompletedOrdersParams struct {
+type ListCancelledOrdersParams struct {
 	Offset int32 `db:"offset" json:"offset"`
 	Limit  int32 `db:"limit" json:"limit"`
 }
 
-type ListCompletedOrdersRow struct {
+type ListCancelledOrdersRow struct {
 	ID          int32      `db:"id" json:"id"`
 	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
 	Status      string     `db:"status" json:"status"`
@@ -253,15 +305,15 @@ type ListCompletedOrdersRow struct {
 	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
 }
 
-func (q *Queries) ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error) {
-	rows, err := q.db.Query(ctx, listCompletedOrders, arg.Offset, arg.Limit)
+func (q *Queries) ListCancelledOrders(ctx context.Context, arg ListCancelledOrdersParams) ([]ListCancelledOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listCancelledOrders, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListCompletedOrdersRow{}
+	items := []ListCancelledOrdersRow{}
 	for rows.Next() {
-		var i ListCompletedOrdersRow
+		var i ListCancelledOrdersRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.WaiterID,
@@ -284,21 +336,21 @@ func (q *Queries) ListCompletedOrders(ctx context.Context, arg ListCompletedOrde
 	return items, nil
 }
 
-const listOrders = `-- name: ListOrders :many
+const listDeliveredOrders = `-- name: ListDeliveredOrders :many
 SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
 FROM "order" o
 LEFT JOIN "user" u ON o.waiter_id = u.id
-WHERE o.status != 'delivered'
-ORDER BY o.created_at ASC
+WHERE o.status = 'delivered'
+ORDER BY o.delivered_at DESC
 LIMIT $2 OFFSET $1
 `
 
-type ListOrdersParams struct {
+type ListDeliveredOrdersParams struct {
 	Offset int32 `db:"offset" json:"offset"`
 	Limit  int32 `db:"limit" json:"limit"`
 }
 
-type ListOrdersRow struct {
+type ListDeliveredOrdersRow struct {
 	ID          int32      `db:"id" json:"id"`
 	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
 	Status      string     `db:"status" json:"status"`
@@ -311,15 +363,189 @@ type ListOrdersRow struct {
 	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
 }
 
-func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error) {
-	rows, err := q.db.Query(ctx, listOrders, arg.Offset, arg.Limit)
+func (q *Queries) ListDeliveredOrders(ctx context.Context, arg ListDeliveredOrdersParams) ([]ListDeliveredOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listDeliveredOrders, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListOrdersRow{}
+	items := []ListDeliveredOrdersRow{}
 	for rows.Next() {
-		var i ListOrdersRow
+		var i ListDeliveredOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+			&i.WaiterName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPendingOrders = `-- name: ListPendingOrders :many
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'pending'
+ORDER BY o.created_at ASC
+LIMIT $2 OFFSET $1
+`
+
+type ListPendingOrdersParams struct {
+	Offset int32 `db:"offset" json:"offset"`
+	Limit  int32 `db:"limit" json:"limit"`
+}
+
+type ListPendingOrdersRow struct {
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
+}
+
+func (q *Queries) ListPendingOrders(ctx context.Context, arg ListPendingOrdersParams) ([]ListPendingOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listPendingOrders, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListPendingOrdersRow{}
+	for rows.Next() {
+		var i ListPendingOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+			&i.WaiterName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProcessingOrders = `-- name: ListProcessingOrders :many
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'processing'
+ORDER BY o.created_at ASC
+LIMIT $2 OFFSET $1
+`
+
+type ListProcessingOrdersParams struct {
+	Offset int32 `db:"offset" json:"offset"`
+	Limit  int32 `db:"limit" json:"limit"`
+}
+
+type ListProcessingOrdersRow struct {
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
+}
+
+func (q *Queries) ListProcessingOrders(ctx context.Context, arg ListProcessingOrdersParams) ([]ListProcessingOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listProcessingOrders, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProcessingOrdersRow{}
+	for rows.Next() {
+		var i ListProcessingOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+			&i.WaiterName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReadyOrders = `-- name: ListReadyOrders :many
+SELECT o.id, o.waiter_id, o.status, o.table_number, o.note, o.total_price, o.created_at, o.delivered_at, o.updated_at, u.name AS waiter_name
+FROM "order" o
+LEFT JOIN "user" u ON o.waiter_id = u.id
+WHERE o.status = 'ready'
+ORDER BY o.created_at ASC
+LIMIT $2 OFFSET $1
+`
+
+type ListReadyOrdersParams struct {
+	Offset int32 `db:"offset" json:"offset"`
+	Limit  int32 `db:"limit" json:"limit"`
+}
+
+type ListReadyOrdersRow struct {
+	ID          int32      `db:"id" json:"id"`
+	WaiterID    *int32     `db:"waiter_id" json:"waiter_id"`
+	Status      string     `db:"status" json:"status"`
+	TableNumber string     `db:"table_number" json:"table_number"`
+	Note        *string    `db:"note" json:"note"`
+	TotalPrice  float32    `db:"total_price" json:"total_price"`
+	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	DeliveredAt *time.Time `db:"delivered_at" json:"delivered_at"`
+	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
+	WaiterName  *string    `db:"waiter_name" json:"waiter_name"`
+}
+
+func (q *Queries) ListReadyOrders(ctx context.Context, arg ListReadyOrdersParams) ([]ListReadyOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listReadyOrders, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReadyOrdersRow{}
+	for rows.Next() {
+		var i ListReadyOrdersRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.WaiterID,
