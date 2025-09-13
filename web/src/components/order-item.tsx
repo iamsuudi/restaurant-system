@@ -40,8 +40,8 @@ export const StatusRender = ({
           case 'ready':
             update = 'delivered'
             break
-          case 'delivered':
-            break
+          default:
+            return
         }
         mutate(update)
       }}
