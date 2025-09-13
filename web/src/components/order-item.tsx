@@ -58,6 +58,7 @@ export const StatusRender = ({
           'bg-yellow-100': status == 'processing',
           'bg-sky-100': status == 'ready',
           'bg-green-100': status == 'delivered',
+          'bg-red-100': status == 'cancelled',
         },
       )}
     >
@@ -67,6 +68,7 @@ export const StatusRender = ({
           'bg-yellow-500': status == 'processing',
           'bg-sky-500': status == 'ready',
           'bg-green-500': status == 'delivered',
+          'bg-red-500': status == 'cancelled',
         })}
       />
       <span
@@ -75,6 +77,7 @@ export const StatusRender = ({
           'text-yellow-500': status == 'processing',
           'text-sky-500': status == 'ready',
           'text-green-500': status == 'delivered',
+          'text-red-500': status == 'cancelled',
         })}
       >
         {_.capitalize(status)}

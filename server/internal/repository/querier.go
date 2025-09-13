@@ -15,12 +15,16 @@ type Querier interface {
 	AvgPreparationTimeWeekly(ctx context.Context) (interface{}, error)
 	BlockAccount(ctx context.Context, userID int32) error
 	ClearOrderItems(ctx context.Context, orderID int32) error
+	CountActiveOrders(ctx context.Context) (int64, error)
+	CountCancelledOrders(ctx context.Context) (int64, error)
 	CountCompletedOrdersDaily(ctx context.Context) (int64, error)
 	CountCompletedOrdersMonthly(ctx context.Context) (int64, error)
 	CountCompletedOrdersWeekly(ctx context.Context) (int64, error)
+	CountDeliveredOrders(ctx context.Context) (int64, error)
 	CountListAuditLogs(ctx context.Context) (int64, error)
-	CountListCompletedOrders(ctx context.Context) (int64, error)
-	CountListOrders(ctx context.Context) (int64, error)
+	CountPendingOrders(ctx context.Context) (int64, error)
+	CountProcessingOrders(ctx context.Context) (int64, error)
+	CountReadyOrders(ctx context.Context) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) error
 	CreateMenuItem(ctx context.Context, arg CreateMenuItemParams) (MenuItem, error)
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error)
@@ -49,9 +53,12 @@ type Querier interface {
 	InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) error
 	ListActiveMenuItems(ctx context.Context) ([]MenuItem, error)
 	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]ListAuditLogsRow, error)
-	ListCompletedOrders(ctx context.Context, arg ListCompletedOrdersParams) ([]ListCompletedOrdersRow, error)
+	ListCancelledOrders(ctx context.Context, arg ListCancelledOrdersParams) ([]ListCancelledOrdersRow, error)
+	ListDeliveredOrders(ctx context.Context, arg ListDeliveredOrdersParams) ([]ListDeliveredOrdersRow, error)
 	ListMenuItems(ctx context.Context) ([]MenuItem, error)
-	ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error)
+	ListPendingOrders(ctx context.Context, arg ListPendingOrdersParams) ([]ListPendingOrdersRow, error)
+	ListProcessingOrders(ctx context.Context, arg ListProcessingOrdersParams) ([]ListProcessingOrdersRow, error)
+	ListReadyOrders(ctx context.Context, arg ListReadyOrdersParams) ([]ListReadyOrdersRow, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 	MarkTokenAsUsed(ctx context.Context, id int32) error
 	SoftDeleteUser(ctx context.Context, id int32) error

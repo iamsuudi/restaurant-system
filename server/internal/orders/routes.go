@@ -14,8 +14,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *pgxpool.Pool, q *repository.Queries
 
 	grp := rg.Group("/orders", auth.Authenticate())
 	{
-		grp.GET("/", handler.ListOrders)
-		grp.GET("/completed", handler.ListCompletedOrders)
+		grp.GET("/list/:target", handler.ListOrders)
 		grp.GET("/:id", handler.GetOrder)
 		grp.GET("/:id/items", handler.GetOrderItems)
 		grp.PUT("/:id", auth.Authorize("kitchen", "waiter"), handler.UpdateOrder)

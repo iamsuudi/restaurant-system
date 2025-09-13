@@ -3,11 +3,12 @@ export const queryKeys = {
   me: () => ['query', 'auth', 'me'],
   order: (id: number) => ['query', 'orders', 'one', { id }],
   orderItems: (id: number) => ['query', 'orders', 'items', { id }],
-  orders: (page: number, limit: number) => [
+  orders: (page: number, limit: number, target: string) => [
     'query',
     'orders',
     { page },
     { limit },
+    { target },
   ],
   completedOrders: (page: number, limit: number) => [
     'query',

@@ -42,5 +42,5 @@ func (s *Service) MonthlyAvgPrepTime(ctx context.Context) (any, error) {
 }
 
 func (s *Service) CountActiveOrders(ctx context.Context) (int64, error) {
-	return s.q.CountListOrders(ctx)
+	return s.q.CountActiveOrders(ctx)
 }

@@ -1,7 +1,6 @@
 package orders
 
 import (
-	"fmt"
 	"net/http"
 	"restaurant-server/internal/repository"
 	"restaurant-server/shared/types"
@@ -40,39 +39,82 @@ func (h *Handler) CreateOrder(c *gin.Context) {
 
 func (h *Handler) ListOrders(c *gin.Context) {
 	limit, offset, _ := utils.PaginationHelper(c)
+	target := c.Param("target")
 
-	count, orders, err := h.service.ListOrders(c, limit, offset)
-	if err != nil {
-		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
-		return
+	switch target {
+	case "pending":
+		count, orders, err := h.service.ListPendingOrders(c, limit, offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		if orders == nil {
+			orders = []repository.ListPendingOrdersRow{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"orders": orders,
+			"count":  count,
+		})
+	case "cancelled":
+		count, orders, err := h.service.ListCancelledOrders(c, limit, offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		if orders == nil {
+			orders = []repository.ListCancelledOrdersRow{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"orders": orders,
+			"count":  count,
+		})
+	case "processing":
+		count, orders, err := h.service.ListProcessingOrders(c, limit, offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		if orders == nil {
+			orders = []repository.ListProcessingOrdersRow{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"orders": orders,
+			"count":  count,
+		})
+	case "ready":
+		count, orders, err := h.service.ListReadyOrders(c, limit, offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		if orders == nil {
+			orders = []repository.ListReadyOrdersRow{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"orders": orders,
+			"count":  count,
+		})
+	case "delivered":
+		count, orders, err := h.service.ListDeliveredOrders(c, limit, offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+			return
+		}
+		if orders == nil {
+			orders = []repository.ListDeliveredOrdersRow{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"orders": orders,
+			"count":  count,
+		})
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid target"})
 	}
-	if orders == nil {
-		orders = []repository.ListOrdersRow{}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"orders": orders,
-		"count":  count,
-	})
-}
-
-func (h *Handler) ListCompletedOrders(c *gin.Context) {
-	limit, offset, _ := utils.PaginationHelper(c)
-
-	count, orders, err := h.service.ListCompletedOrders(c, limit, offset)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
-		return
-	}
-	if orders == nil {
-		orders = []repository.ListCompletedOrdersRow{}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"orders": orders,
-		"count":  count,
-	})
 }
 
 func (h *Handler) GetOrder(c *gin.Context) {
