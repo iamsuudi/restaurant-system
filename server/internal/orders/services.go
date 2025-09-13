@@ -90,13 +90,9 @@ func (s *Service) EditOrder(ctx context.Context, actorID int32, id int32, input 
 		return errors.New("Status must be pending")
 	}
 
-	status := "pending"
-
 	// 2. Edit order
 	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
 		ID:          order.ID,
-		WaiterID:    &actorID,
-		Status:      &status,
 		Note:        input.Note,
 		TableNumber: input.TableNumber,
 		TotalPrice:  input.Total,
@@ -162,13 +158,14 @@ func (s *Service) UpdateOrderStatus(ctx context.Context, actorID int32, id int32
 
 	if before.Status == "delivered" {
 		return errors.New("Order is already delivered")
+	} else if status == "cancelled" {
+		return errors.New("Order is already cancelled")
 	}
 
 	// 2. Edit order status
 	after, err := qtx.UpdateOrder(ctx, repository.UpdateOrderParams{
-		ID:       before.ID,
-		WaiterID: &actorID,
-		Status:   &status,
+		ID:     before.ID,
+		Status: &status,
 	})
 	if err != nil {
 		return err
