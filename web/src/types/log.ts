@@ -3,6 +3,7 @@ export interface Log {
   actor_id: number
   actor_name: string
   actor_role: string
+  actor_picture: string
   action_type: string
   object_type: string
   target_menu_id?: number

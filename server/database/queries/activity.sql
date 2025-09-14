@@ -7,13 +7,13 @@ INSERT INTO activity_log (
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 
 -- name: GetAuditLog :one
-SELECT log.*, au.name AS actor_name, au.role AS actor_role
+SELECT log.*, au.name AS actor_name, au.role AS actor_role, au.picture AS actor_picture
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
 WHERE log.id = $1;
 
 -- name: ListAuditLogs :many
-SELECT log.*, au.name AS actor_name, au.role AS actor_role
+SELECT log.*, au.name AS actor_name, au.role AS actor_role, au.picture AS actor_picture
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
 ORDER BY log.ts DESC

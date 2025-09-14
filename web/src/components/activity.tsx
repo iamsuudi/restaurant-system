@@ -8,9 +8,11 @@ export function TargetRenderer({ log }: { log: Log }) {
   switch (log.object_type) {
     case 'user':
       return (
-        <p className="relative text-gray-500 flex items-center gap-1">
-          <User className="size-3" />
-          <span>user</span>
+        <p className="relative text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1">
+          <div className="flex items-center gap-1">
+            <User className="size-3" />
+            <span>user</span>
+          </div>
           <p className="ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
             {_.startCase(log.target_user_name)}
           </p>
@@ -18,9 +20,11 @@ export function TargetRenderer({ log }: { log: Log }) {
       )
     case 'menu':
       return (
-        <p className="relative text-gray-500 flex items-center gap-1">
-          <UtensilsCrossed className="size-3" />
-          <span>menu</span>
+        <p className="relative text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1">
+          <div className="flex items-center gap-1">
+            <UtensilsCrossed className="size-3" />
+            <span>menu</span>
+          </div>
           <p className="ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
             {_.startCase(log.target_menu_name)}
           </p>
@@ -28,9 +32,11 @@ export function TargetRenderer({ log }: { log: Log }) {
       )
     case 'order':
       return (
-        <p className="relative text-gray-500 flex items-center gap-1">
-          <ChefHat className="size-3" />
-          <span>order</span>
+        <p className="relative text-gray-500 flex flex-col sm:flex-row sm:items-center gap-1">
+          <div className="flex items-center gap-1">
+            <ChefHat className="size-3" />
+            <span>order</span>
+          </div>
           <p className="italtic ml-2 text-foreground hover:cursor-pointer hover:underline hover:text-primary">
             #{log.target_order_id}
           </p>
