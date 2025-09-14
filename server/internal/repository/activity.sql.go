@@ -26,7 +26,7 @@ func (q *Queries) CountListAuditLogs(ctx context.Context) (int64, error) {
 }
 
 const getAuditLog = `-- name: GetAuditLog :one
-SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role
+SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role, au.picture AS actor_picture
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
 WHERE log.id = $1
@@ -46,6 +46,7 @@ type GetAuditLogRow struct {
 	Ts             time.Time   `db:"ts" json:"ts"`
 	ActorName      string      `db:"actor_name" json:"actor_name"`
 	ActorRole      string      `db:"actor_role" json:"actor_role"`
+	ActorPicture   *string     `db:"actor_picture" json:"actor_picture"`
 }
 
 func (q *Queries) GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, error) {
@@ -65,6 +66,7 @@ func (q *Queries) GetAuditLog(ctx context.Context, id int32) (GetAuditLogRow, er
 		&i.Ts,
 		&i.ActorName,
 		&i.ActorRole,
+		&i.ActorPicture,
 	)
 	return i, err
 }
@@ -106,7 +108,7 @@ func (q *Queries) InsertAuditLog(ctx context.Context, arg InsertAuditLogParams) 
 }
 
 const listAuditLogs = `-- name: ListAuditLogs :many
-SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role
+SELECT log.id, log.actor_id, log.target_user_id, log.target_user_name, log.target_menu_id, log.target_menu_name, log.target_order_id, log.action_type, log.object_type, log.diff, log.ts, au.name AS actor_name, au.role AS actor_role, au.picture AS actor_picture
 FROM activity_log log
 JOIN "user" au ON au.id = log.actor_id
 ORDER BY log.ts DESC
@@ -132,6 +134,7 @@ type ListAuditLogsRow struct {
 	Ts             time.Time   `db:"ts" json:"ts"`
 	ActorName      string      `db:"actor_name" json:"actor_name"`
 	ActorRole      string      `db:"actor_role" json:"actor_role"`
+	ActorPicture   *string     `db:"actor_picture" json:"actor_picture"`
 }
 
 func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]ListAuditLogsRow, error) {
@@ -157,6 +160,7 @@ func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([
 			&i.Ts,
 			&i.ActorName,
 			&i.ActorRole,
+			&i.ActorPicture,
 		); err != nil {
 			return nil, err
 		}

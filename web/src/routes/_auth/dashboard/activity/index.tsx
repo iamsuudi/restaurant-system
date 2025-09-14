@@ -20,7 +20,7 @@ import {
 import { Pagination } from '@/components/pagination'
 import { ErrorComponent } from '@/components/error-component'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, imageUrl } from '@/lib/utils'
 import { RoleRender } from '@/components/role-render'
 
 export const Route = createFileRoute('/_auth/dashboard/activity/')({
@@ -70,13 +70,21 @@ function RouteComponent() {
                 {data?.logs.map((log) => {
                   return (
                     <TableRow key={log.id}>
-                      <TableCell></TableCell>
+                      <TableCell>
+                        <img
+                          src={imageUrl(log.actor_picture)}
+                          alt={log.actor_name}
+                          className="object-contain w-8 h-8 rounded-full"
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col items-start">
                           <p className="hover:underline hover:cursor-pointer hover:text-primary">
                             {log.actor_name}
                           </p>
-                          <RoleRender role={log.actor_role} />
+                          <div className="scale-80">
+                            <RoleRender role={log.actor_role} />
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -94,7 +102,7 @@ function RouteComponent() {
                           params={{ id: log.id }}
                           className="text-blue-500 hover:underline"
                         >
-                          Details{' '}
+                          <span className="sm:inline hidden">Details</span>
                           <ExternalLink className="size-4 inline ml-1 mb-1" />
                         </Link>
                       </TableCell>
