@@ -37,5 +37,37 @@ export const queryKeys = {
       { target },
     ],
     countActiveOrders: () => ['query', 'analytics', 'active-orders'],
+    topSellingItems: () => ['query', 'analytics', 'top-selling-items'],
+    topActiveUsers: () => ['query', 'analytics', 'top-active-users'],
+    ordersByCategory: (target: string) => [
+      'query',
+      'analytics',
+      'orders-by-category',
+      { target },
+    ],
+    ordersAndRevenue: (target: string) => [
+      'query',
+      'analytics',
+      'orders-and-revenue',
+      { target },
+    ],
+    waiterSelfPerformance: (target: string, waiterId?: number) => [
+      'query',
+      'analytics',
+      'waiter-self-performance',
+      { target, waiterId },
+    ],
+    waiterPerformance: (target: string) => [
+      'query',
+      'analytics',
+      'waiter-performance',
+      { target },
+    ],
+    waiterPerformanceSummary: () => [
+      'query',
+      'analytics',
+      'waiter-performance-summary',
+    ],
+    totalRevenue: () => ['query', 'analytics', 'total-revenue'],
   },
 }

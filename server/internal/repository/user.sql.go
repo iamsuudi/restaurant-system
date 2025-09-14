@@ -190,6 +190,53 @@ func (q *Queries) SoftDeleteUser(ctx context.Context, id int32) error {
 	return err
 }
 
+const topActiveUsers = `-- name: TopActiveUsers :many
+SELECT u.id,
+       u.name,
+       u.role,
+       u.picture,
+       COUNT(*) AS total_actions
+FROM activity_log al
+JOIN "user" u ON u.id = al.actor_id
+GROUP BY u.id, u.name, u.role
+ORDER BY total_actions DESC
+LIMIT 10
+`
+
+type TopActiveUsersRow struct {
+	ID           int32   `db:"id" json:"id"`
+	Name         string  `db:"name" json:"name"`
+	Role         string  `db:"role" json:"role"`
+	Picture      *string `db:"picture" json:"picture"`
+	TotalActions int64   `db:"total_actions" json:"total_actions"`
+}
+
+func (q *Queries) TopActiveUsers(ctx context.Context) ([]TopActiveUsersRow, error) {
+	rows, err := q.db.Query(ctx, topActiveUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TopActiveUsersRow{}
+	for rows.Next() {
+		var i TopActiveUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Role,
+			&i.Picture,
+			&i.TotalActions,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateUserInfo = `-- name: UpdateUserInfo :one
 UPDATE "user"
 SET
