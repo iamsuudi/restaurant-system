@@ -9,60 +9,75 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"restaurant-server/internal/repository"
-	"restaurant-server/shared/types"
 )
 
+type User struct {
+	Name     string
+	Email    string
+	Phone    string
+	Role     string
+	Password string
+	Picture  string
+}
+
 // CreateUsers returns the proportional user list with plain passwords.
-func CreateUsers() []types.UserPayload {
-	users := []types.UserPayload{
-		types.UserPayload{
-			Name:     "Abdulfetah Suudi",
-			Email:    "suudi@example.com",
-			Phone:    "0991752985",
+func CreateUsers() []User {
+	users := []User{
+		User{
+			Name:     "John Doe",
+			Email:    "john@example.com",
+			Phone:    "0900110022",
 			Role:     "admin",
 			Password: "password",
+			Picture:  "manager.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Melissa Key",
 			Email:    "melissa@example.com",
 			Phone:    "0900110022",
 			Role:     "waiter",
 			Password: "password",
+			Picture:  "melissa.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Lawrence Bell",
 			Email:    "lawrence@example.com",
 			Phone:    "0900110022",
 			Role:     "waiter",
 			Password: "password",
+			Picture:  "lawrence.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Annette Oneal",
 			Email:    "annette@example.com",
 			Phone:    "0900110022",
 			Role:     "waiter",
 			Password: "password",
+			Picture:  "anette.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Diana Cabrera",
 			Email:    "diana@example.com",
 			Phone:    "0900110022",
 			Role:     "kitchen",
 			Password: "password",
+			Picture:  "diana.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Brent Chambers",
 			Email:    "brent@example.com",
 			Phone:    "0900110022",
 			Role:     "kitchen",
 			Password: "password",
+			Picture:  "brent.jpg",
 		},
-		types.UserPayload{
+		User{
 			Name:     "Michael Clark",
 			Email:    "michael@example.com",
 			Phone:    "0900110022",
 			Role:     "kitchen",
 			Password: "password",
+			Picture:  "michael.jpg",
 		},
 	}
 	return users
@@ -81,10 +96,11 @@ func seedUsers(ctx context.Context, queries *repository.Queries) {
 		}
 
 		user, err := queries.CreateUser(ctx, repository.CreateUserParams{
-			Name:  user.Name,
-			Email: user.Email,
-			Phone: user.Phone,
-			Role:  user.Role,
+			Name:    user.Name,
+			Email:   user.Email,
+			Phone:   user.Phone,
+			Role:    user.Role,
+			Picture: &user.Picture,
 		})
 		if err != nil {
 			log.Fatalf("Failed to seed user: %v", err)
