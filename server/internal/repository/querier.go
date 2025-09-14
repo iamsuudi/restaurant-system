@@ -61,7 +61,16 @@ type Querier interface {
 	ListReadyOrders(ctx context.Context, arg ListReadyOrdersParams) ([]ListReadyOrdersRow, error)
 	ListUsers(ctx context.Context) ([]ListUsersRow, error)
 	MarkTokenAsUsed(ctx context.Context, id int32) error
+	OrdersAndRevenueDaily(ctx context.Context) ([]OrdersAndRevenueDailyRow, error)
+	OrdersAndRevenueMonthly(ctx context.Context) ([]OrdersAndRevenueMonthlyRow, error)
+	OrdersAndRevenueWeekly(ctx context.Context) ([]OrdersAndRevenueWeeklyRow, error)
+	OrdersByCategoryDaily(ctx context.Context) ([]OrdersByCategoryDailyRow, error)
+	OrdersByCategoryMonthly(ctx context.Context) ([]OrdersByCategoryMonthlyRow, error)
+	OrdersByCategoryWeekly(ctx context.Context) ([]OrdersByCategoryWeeklyRow, error)
 	SoftDeleteUser(ctx context.Context, id int32) error
+	TopActiveUsers(ctx context.Context) ([]TopActiveUsersRow, error)
+	TopSellingItems(ctx context.Context) ([]TopSellingItemsRow, error)
+	TotalRevenue(ctx context.Context) (interface{}, error)
 	UnblockAccount(ctx context.Context, userID int32) error
 	UpdateMenuItem(ctx context.Context, arg UpdateMenuItemParams) (MenuItem, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (Order, error)
@@ -69,6 +78,14 @@ type Querier interface {
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) (Order, error)
 	UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) (User, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
+	WaiterPerformanceDaily(ctx context.Context) ([]WaiterPerformanceDailyRow, error)
+	WaiterPerformanceMonthly(ctx context.Context) ([]WaiterPerformanceMonthlyRow, error)
+	WaiterPerformanceSummary(ctx context.Context) ([]WaiterPerformanceSummaryRow, error)
+	WaiterPerformanceWeekly(ctx context.Context) ([]WaiterPerformanceWeeklyRow, error)
+	WaiterSelfPerformanceDaily(ctx context.Context, actorID int32) ([]WaiterSelfPerformanceDailyRow, error)
+	WaiterSelfPerformanceMonthly(ctx context.Context, actorID int32) ([]WaiterSelfPerformanceMonthlyRow, error)
+	WaiterSelfPerformanceSummary(ctx context.Context, actorID int32) (WaiterSelfPerformanceSummaryRow, error)
+	WaiterSelfPerformanceWeekly(ctx context.Context, actorID int32) ([]WaiterSelfPerformanceWeeklyRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

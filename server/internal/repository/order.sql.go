@@ -81,6 +81,48 @@ func (q *Queries) CountCancelledOrders(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countCompletedOrdersDaily = `-- name: CountCompletedOrdersDaily :one
+SELECT COUNT(*) AS total
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE(created_at) = CURRENT_DATE
+`
+
+func (q *Queries) CountCompletedOrdersDaily(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countCompletedOrdersDaily)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countCompletedOrdersMonthly = `-- name: CountCompletedOrdersMonthly :one
+SELECT COUNT(*) AS total
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+`
+
+func (q *Queries) CountCompletedOrdersMonthly(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countCompletedOrdersMonthly)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
+const countCompletedOrdersWeekly = `-- name: CountCompletedOrdersWeekly :one
+SELECT COUNT(*) AS total
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE_TRUNC('week', created_at) = DATE_TRUNC('week', CURRENT_DATE)
+`
+
+func (q *Queries) CountCompletedOrdersWeekly(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countCompletedOrdersWeekly)
+	var total int64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const countDeliveredOrders = `-- name: CountDeliveredOrders :one
 SELECT COUNT(*)
 FROM "order"
@@ -186,6 +228,120 @@ DELETE FROM order_item WHERE id = $1
 func (q *Queries) DeleteOrderItem(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, deleteOrderItem, id)
 	return err
+}
+
+const getCompletedOrdersDaily = `-- name: GetCompletedOrdersDaily :many
+SELECT id, waiter_id, status, table_number, note, total_price, created_at, delivered_at, updated_at
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE(created_at) = CURRENT_DATE
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetCompletedOrdersDaily(ctx context.Context) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getCompletedOrdersDaily)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Order{}
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCompletedOrdersMonthly = `-- name: GetCompletedOrdersMonthly :many
+SELECT id, waiter_id, status, table_number, note, total_price, created_at, delivered_at, updated_at
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetCompletedOrdersMonthly(ctx context.Context) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getCompletedOrdersMonthly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Order{}
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCompletedOrdersWeekly = `-- name: GetCompletedOrdersWeekly :many
+SELECT id, waiter_id, status, table_number, note, total_price, created_at, delivered_at, updated_at
+FROM "order"
+WHERE status = 'delivered'
+  AND DATE_TRUNC('week', created_at) = DATE_TRUNC('week', CURRENT_DATE)
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetCompletedOrdersWeekly(ctx context.Context) ([]Order, error) {
+	rows, err := q.db.Query(ctx, getCompletedOrdersWeekly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Order{}
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.WaiterID,
+			&i.Status,
+			&i.TableNumber,
+			&i.Note,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.DeliveredAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOrder = `-- name: GetOrder :one
@@ -557,6 +713,133 @@ func (q *Queries) ListReadyOrders(ctx context.Context, arg ListReadyOrdersParams
 			&i.DeliveredAt,
 			&i.UpdatedAt,
 			&i.WaiterName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ordersByCategoryDaily = `-- name: OrdersByCategoryDaily :many
+SELECT date_trunc('day', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC
+LIMIT 30
+`
+
+type OrdersByCategoryDailyRow struct {
+	Period    time.Time `db:"period" json:"period"`
+	Category  string    `db:"category" json:"category"`
+	TotalSold int64     `db:"total_sold" json:"total_sold"`
+	Revenue   float32   `db:"revenue" json:"revenue"`
+}
+
+func (q *Queries) OrdersByCategoryDaily(ctx context.Context) ([]OrdersByCategoryDailyRow, error) {
+	rows, err := q.db.Query(ctx, ordersByCategoryDaily)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OrdersByCategoryDailyRow{}
+	for rows.Next() {
+		var i OrdersByCategoryDailyRow
+		if err := rows.Scan(
+			&i.Period,
+			&i.Category,
+			&i.TotalSold,
+			&i.Revenue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ordersByCategoryMonthly = `-- name: OrdersByCategoryMonthly :many
+SELECT date_trunc('month', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC
+`
+
+type OrdersByCategoryMonthlyRow struct {
+	Period    time.Time `db:"period" json:"period"`
+	Category  string    `db:"category" json:"category"`
+	TotalSold int64     `db:"total_sold" json:"total_sold"`
+	Revenue   float32   `db:"revenue" json:"revenue"`
+}
+
+func (q *Queries) OrdersByCategoryMonthly(ctx context.Context) ([]OrdersByCategoryMonthlyRow, error) {
+	rows, err := q.db.Query(ctx, ordersByCategoryMonthly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OrdersByCategoryMonthlyRow{}
+	for rows.Next() {
+		var i OrdersByCategoryMonthlyRow
+		if err := rows.Scan(
+			&i.Period,
+			&i.Category,
+			&i.TotalSold,
+			&i.Revenue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ordersByCategoryWeekly = `-- name: OrdersByCategoryWeekly :many
+SELECT date_trunc('week', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC
+`
+
+type OrdersByCategoryWeeklyRow struct {
+	Period    time.Time `db:"period" json:"period"`
+	Category  string    `db:"category" json:"category"`
+	TotalSold int64     `db:"total_sold" json:"total_sold"`
+	Revenue   float32   `db:"revenue" json:"revenue"`
+}
+
+func (q *Queries) OrdersByCategoryWeekly(ctx context.Context) ([]OrdersByCategoryWeeklyRow, error) {
+	rows, err := q.db.Query(ctx, ordersByCategoryWeekly)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OrdersByCategoryWeeklyRow{}
+	for rows.Next() {
+		var i OrdersByCategoryWeeklyRow
+		if err := rows.Scan(
+			&i.Period,
+			&i.Category,
+			&i.TotalSold,
+			&i.Revenue,
 		); err != nil {
 			return nil, err
 		}

@@ -40,21 +40,30 @@ WHERE status = 'delivered'
   AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE);
 
 
+-- name: OrdersByCategoryDaily :many
+SELECT date_trunc('day', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC
+LIMIT 30;
 
--- name: AvgPreparationTimeDaily :one
-SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (delivered_at - created_at))), 0) AS avg_prep_seconds
-FROM "order"
-WHERE status = 'delivered'
-AND DATE(created_at) = CURRENT_DATE;
+-- name: OrdersByCategoryWeekly :many
+SELECT date_trunc('week', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC;
 
--- name: AvgPreparationTimeWeekly :one
-SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (delivered_at - created_at))), 0) AS avg_prep_seconds
-FROM "order"
-WHERE status = 'delivered'
-AND DATE_TRUNC('week', created_at) = DATE_TRUNC('week', CURRENT_DATE);
-
--- name: AvgPreparationTimeMonthly :one
-SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (delivered_at - created_at))), 0) AS avg_prep_seconds
-FROM "order"
-WHERE status = 'delivered'
-AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE);
+-- name: OrdersByCategoryMonthly :many
+SELECT date_trunc('month', oi.created_at)::timestamptz AS period,
+       oi.category,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+GROUP BY period, oi.category
+ORDER BY period, total_sold DESC;

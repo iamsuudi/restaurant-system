@@ -1,14 +1,26 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
   CheckCircle,
+  CircleDollarSignIcon,
   FileClock,
   Phone,
   TimerReset,
   UserRound,
 } from 'lucide-react'
 import { useState } from 'react'
+import { CategoryTotalSold } from './-charts/category-total-sold'
+import { CategoryRevenue } from './-charts/category-revenue'
 import { query } from '@/hooks/query'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { RoleRender } from '@/components/role-render'
 
 export const Route = createFileRoute('/_auth/dashboard/')({
   component: RouteComponent,
@@ -30,6 +42,7 @@ function Summary() {
   const { data: totalCompletedOrders } = query.countCompletedOrders(target)
   const { data: avgPrepTime } = query.avgPrepTime(target)
   const { data: totalActiveOrders } = query.countActiveOrders()
+  const { data: totalRevenue } = query.totalRevenue()
 
   return (
     <div className="space-y-5">
@@ -68,18 +81,31 @@ function Summary() {
           </Button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-10">
-        <div className="flex-1 flex items-center gap-4 rounded-lg min-w-60 border p-4">
-          <div className="flex justify-center items-center size-10 bg-green-200 rounded-lg mb-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
+        <div className="flex items-center gap-4 rounded-lg min-w-60 border p-4">
+          <div className="flex justify-center items-center size-10 bg-pink-600/30 rounded-lg mb-auto">
+            <CircleDollarSignIcon className="text-pink-600 size-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm">Total Revenue</span>
+            <span className="font-black text-2xl">
+              {totalRevenue?.toFixed(2) || 0}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 rounded-lg min-w-60 border p-4">
+          <div className="flex justify-center items-center size-10 bg-green-600/30 rounded-lg mb-auto">
             <CheckCircle className="text-green-600 size-6" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm">Orders Completed</span>
-            <span className="font-black text-2xl">{totalCompletedOrders}</span>
+            <span className="font-black text-2xl">
+              {totalCompletedOrders || 0}
+            </span>
           </div>
         </div>
         <div className="flex-1 flex items-center gap-4 rounded-lg min-w-60 border p-4">
-          <div className="flex justify-center items-center size-10 bg-blue-200 rounded-lg mb-auto">
+          <div className="flex justify-center items-center size-10 bg-blue-600/30 rounded-lg mb-auto">
             <TimerReset className="text-blue-600 size-6" />
           </div>
           <div className="flex flex-col">
@@ -90,15 +116,134 @@ function Summary() {
           </div>
         </div>
         <div className="flex-1 flex items-center gap-4 rounded-lg min-w-60 border p-4">
-          <div className="flex justify-center items-center size-10 bg-yellow-200 rounded-lg mb-auto">
+          <div className="flex justify-center items-center size-10 bg-yellow-600/30 rounded-lg mb-auto">
             <FileClock className="text-yellow-600 size-6" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm">Pending Tasks</span>
-            <span className="font-black text-2xl">{totalActiveOrders}</span>
+            <span className="font-black text-2xl">
+              {totalActiveOrders || 0}
+            </span>
           </div>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-10">
+        <WaiterPerformanceSummary />
+        <TopSellingItems />
+        <TopActiveUsers />
+      </div>
+
+      <CategoryTotalSold />
+      <CategoryRevenue />
+    </div>
+  )
+}
+
+function WaiterPerformanceSummary() {
+  const { data: waiterPerformance } = query.waiterPerformanceSummary()
+
+  return (
+    <div className="flex-1 flex flex-col gap-5 border rounded-2xl py-5">
+      <h2 className="text-xl font-bold px-5">Waiters Performance Summary</h2>
+      <Table className="">
+        <TableHeader className="bg-primary-foreground">
+          <TableRow>
+            <TableHead className="min-w-16"></TableHead>
+            <TableHead className="w-40">Name</TableHead>
+            <TableHead className="text-center">Orders</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {waiterPerformance?.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="flex justify-center">
+                <img
+                  src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
+                  className="bg-secondary object-cover size-10 rounded-full"
+                />
+              </TableCell>
+              <TableCell>{user.name}</TableCell>
+              <TableCell className="text-center">
+                {user.created_orders}
+              </TableCell>
+              <TableCell className="text-center">
+                {user.total_actions}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function TopSellingItems() {
+  const { data: topSellingItems } = query.topSellingItems()
+
+  return (
+    <div className="flex-1 flex flex-col gap-5 border rounded-2xl py-5">
+      <h2 className="text-xl font-bold px-5">Top Selling Items Summary</h2>
+      <Table className="">
+        <TableHeader className="bg-primary-foreground">
+          <TableRow>
+            <TableHead className="text-center min-w-16">ID</TableHead>
+            <TableHead className="min-w-32">Name</TableHead>
+            <TableHead className="text-center">Revenue</TableHead>
+            <TableHead className="text-center">Sold</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {topSellingItems?.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="italic text-center">#{item.id}</TableCell>
+              <TableCell>{item.name}</TableCell>
+              <TableCell className="text-center">{item.revenue}</TableCell>
+              <TableCell className="text-center">{item.total_sold}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function TopActiveUsers() {
+  const { data: topActiveUsers } = query.topActiveUsers()
+
+  return (
+    <div className="flex-1 flex flex-col gap-5 border rounded-2xl py-5">
+      <h2 className="text-xl font-bold px-5">Top Active Users</h2>
+      <Table className="">
+        <TableHeader className="bg-primary-foreground">
+          <TableRow>
+            <TableHead className="min-w-16"></TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {topActiveUsers?.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="flex justify-center">
+                <img
+                  src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
+                  className="bg-secondary object-cover size-10 rounded-full"
+                />
+              </TableCell>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>
+                <RoleRender role={user.role} />
+              </TableCell>
+              <TableCell className="text-center">
+                {user.total_actions}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

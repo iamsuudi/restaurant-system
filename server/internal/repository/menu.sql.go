@@ -152,6 +152,50 @@ func (q *Queries) ListMenuItems(ctx context.Context) ([]MenuItem, error) {
 	return items, nil
 }
 
+const topSellingItems = `-- name: TopSellingItems :many
+SELECT mi.id,
+       mi.name,
+       SUM(oi.quantity) AS total_sold,
+       SUM(oi.price * oi.quantity)::double precision AS revenue
+FROM order_item oi
+JOIN menu_item mi ON mi.id = oi.menu_item_id
+GROUP BY mi.id, mi.name
+ORDER BY total_sold DESC
+LIMIT 10
+`
+
+type TopSellingItemsRow struct {
+	ID        int32   `db:"id" json:"id"`
+	Name      string  `db:"name" json:"name"`
+	TotalSold int64   `db:"total_sold" json:"total_sold"`
+	Revenue   float32 `db:"revenue" json:"revenue"`
+}
+
+func (q *Queries) TopSellingItems(ctx context.Context) ([]TopSellingItemsRow, error) {
+	rows, err := q.db.Query(ctx, topSellingItems)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TopSellingItemsRow{}
+	for rows.Next() {
+		var i TopSellingItemsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.TotalSold,
+			&i.Revenue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateMenuItem = `-- name: UpdateMenuItem :one
 UPDATE menu_item
 SET
