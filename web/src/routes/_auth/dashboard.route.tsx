@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { query } from '@/hooks/query'
 import { ModeToggle } from '@/components/mode-toggle'
+import { imageUrl } from '@/lib/utils'
 
 export const Route = createFileRoute('/_auth/dashboard')({
   component: RootComponent,
@@ -74,14 +75,12 @@ function RootComponent() {
               <ModeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="h-auto flex items-center gap-1 p-0 hover:bg-transparent">
-                    <Avatar>
-                      <AvatarImage src={data?.picture} />
-                      <AvatarFallback>{data?.name[0] || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </div>
+                  <Avatar>
+                    <AvatarImage src={imageUrl(data?.picture || '')} />
+                    <AvatarFallback>{data?.name[0] || 'U'}</AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="lg:w-80 md:w-60 w-48 mx-5 mt-2">
+                <DropdownMenuContent className="md:w-60 w-48 mx-5 mt-2">
                   <DropdownMenuLabel className="flex min-w-0 flex-col">
                     <span className="text-foreground truncate text-sm font-medium">
                       {data?.name}

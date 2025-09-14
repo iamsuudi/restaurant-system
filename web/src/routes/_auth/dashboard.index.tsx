@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
   CheckCircle,
+  ChevronDown,
   CircleDollarSignIcon,
   FileClock,
   Phone,
@@ -8,6 +9,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { useState } from 'react'
+import _ from 'lodash'
 import { CategoryTotalSold } from './-charts/category-total-sold'
 import { CategoryRevenue } from './-charts/category-revenue'
 import { query } from '@/hooks/query'
@@ -21,6 +23,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { RoleRender } from '@/components/role-render'
+import { imageUrl } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export const Route = createFileRoute('/_auth/dashboard/')({
   component: RouteComponent,
@@ -48,7 +56,8 @@ function Summary() {
     <div className="space-y-5">
       <div className="flex justify-between gap-5">
         <h2 className="font-bold text-2xl">Summary</h2>
-        <div className="flex gap-2">
+
+        <div className="hidden md:flex gap-2 ">
           <Button
             variant={target === 'daily' ? 'default' : 'outline'}
             onClick={() => {
@@ -80,7 +89,48 @@ function Summary() {
             Monthly
           </Button>
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="md:hidden">
+            <Button>
+              {_.capitalize(target)} <ChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-32 mx-5 space-y-1">
+            <Button
+              variant={target === 'daily' ? 'default' : 'outline'}
+              onClick={() => {
+                setTarget('daily')
+              }}
+              size="sm"
+              className="w-full"
+            >
+              Daily
+            </Button>
+            <Button
+              variant={target === 'weekly' ? 'default' : 'outline'}
+              onClick={() => {
+                setTarget('weekly')
+              }}
+              size="sm"
+              className="w-full"
+            >
+              Weekly
+            </Button>
+            <Button
+              variant={target === 'monthly' ? 'default' : 'outline'}
+              onClick={() => {
+                setTarget('monthly')
+              }}
+              size="sm"
+              className="w-full"
+            >
+              Monthly
+            </Button>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
         <div className="flex items-center gap-4 rounded-lg min-w-60 border p-4">
           <div className="flex justify-center items-center size-10 bg-pink-600/30 rounded-lg mb-auto">
@@ -145,7 +195,7 @@ function WaiterPerformanceSummary() {
 
   return (
     <div className="flex-1 flex flex-col gap-5 border rounded-2xl py-5">
-      <h2 className="text-xl font-bold px-5">Waiters Performance Summary</h2>
+      <h2 className="text-xl font-bold px-5">Waiters Performance</h2>
       <Table className="">
         <TableHeader className="bg-primary-foreground">
           <TableRow>
@@ -184,7 +234,7 @@ function TopSellingItems() {
 
   return (
     <div className="flex-1 flex flex-col gap-5 border rounded-2xl py-5">
-      <h2 className="text-xl font-bold px-5">Top Selling Items Summary</h2>
+      <h2 className="text-xl font-bold px-5">Top Selling Items</h2>
       <Table className="">
         <TableHeader className="bg-primary-foreground">
           <TableRow>
@@ -229,7 +279,7 @@ function TopActiveUsers() {
             <TableRow key={user.id}>
               <TableCell className="flex justify-center">
                 <img
-                  src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
+                  src={imageUrl(user.picture)}
                   className="bg-secondary object-cover size-10 rounded-full"
                 />
               </TableCell>
@@ -252,13 +302,13 @@ function Greeting() {
   const { data } = query.currentUserQuery()
 
   return (
-    <div className="flex gap-10 rounded-lg shadow p-5">
+    <div className="flex gap-5 sm:gap-10 rounded-lg border p-3 sm:p-5">
       <img
         src={`${import.meta.env.VITE_ASSETS_HOST}/${data?.picture}`}
-        className="object-cover size-24 bg-secondary rounded-full"
+        className="object-cover size-12 sm:size-24 bg-secondary rounded-full"
       />
       <div>
-        <p className="font-black text-xl">
+        <p className="font-black text-lg sm:text-xl">
           Welcome back, {data?.name.split(' ')[0]}!
         </p>
         <p className="text-md text-foreground/80 mt-1">
@@ -269,7 +319,7 @@ function Greeting() {
               ? 'cook up a storm?'
               : 'take some orders?'}
         </p>
-        <div className="flex gap-7 items-center mt-3 text-foreground/80">
+        <div className="flex flex-col sm:flex-row gap-x-7 gap-y-2 sm:items-center items-start mt-3 text-foreground/80">
           <p className="flex items-center gap-1 text-sm">
             <UserRound className="size-4" />
             {data?.name}

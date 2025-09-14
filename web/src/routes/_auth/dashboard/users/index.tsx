@@ -16,7 +16,7 @@ import {
 import { query } from '@/hooks/query'
 import { ErrorComponent } from '@/components/error-component'
 import { RoleRender } from '@/components/role-render'
-import { cn } from '@/lib/utils'
+import { cn, imageUrl } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_auth/dashboard/users/')({
@@ -63,7 +63,7 @@ function RouteComponent() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <img
-                          src={`${import.meta.env.VITE_ASSETS_HOST}/${user.picture}`}
+                          src={imageUrl(user.picture)}
                           className="bg-secondary object-cover size-10 rounded-full"
                         />
                       </TableCell>

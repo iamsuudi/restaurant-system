@@ -35,7 +35,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import { cn, imageUrl } from '@/lib/utils'
 import { query } from '@/hooks/query'
 
 export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
@@ -58,7 +58,7 @@ export const KitchenMenuTable = ({ data }: { data?: Array<Menu> }) => {
                   <img
                     width={800}
                     height={800}
-                    src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
+                    src={imageUrl(menu.picture)}
                     className="bg-orange-500 object-cover size-10 rounded-full"
                   />
                 </ImageZoom>
@@ -157,7 +157,7 @@ function MenuBox({
   return (
     <div className="w-40 space-y-4">
       <img
-        src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
+        src={imageUrl(menu.picture)}
         onClick={() => {
           if (!selectedMenu.some((item) => item.menu.id === menu.id)) {
             setSelectedMenu([
@@ -432,7 +432,7 @@ function MenuDetail({
           <img
             width={800}
             height={800}
-            src={`${import.meta.env.VITE_ASSETS_HOST}/${menu.picture}`}
+            src={imageUrl(menu.picture)}
             className="bg-orange-500 object-cover sm:max-w-60 max-h-60 min-w-60"
           />
           <div className="min-w-60 sm:max-w-60 w-full space-y-2">
