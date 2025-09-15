@@ -53,7 +53,7 @@ function Summary() {
   const { data: totalRevenue } = query.totalRevenue()
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-10">
       <div className="flex justify-between gap-5">
         <h2 className="font-bold text-2xl">Summary</h2>
 
@@ -131,7 +131,7 @@ function Summary() {
         </DropdownMenu>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-10 gap-y-5">
         <div className="flex items-center gap-4 rounded-lg min-w-60 border p-4">
           <div className="flex justify-center items-center size-10 bg-pink-600/30 rounded-lg mb-auto">
             <CircleDollarSignIcon className="text-pink-600 size-6" />
