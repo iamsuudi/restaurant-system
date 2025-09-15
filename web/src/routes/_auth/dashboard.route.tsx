@@ -4,13 +4,7 @@ import {
   createFileRoute,
   useRouter,
 } from '@tanstack/react-router'
-import {
-  Activity,
-  Bell,
-  LogOutIcon,
-  Settings,
-  UserRoundPen,
-} from 'lucide-react'
+import { Activity, LogOutIcon, UserRoundPen } from 'lucide-react'
 import { motion } from 'motion/react'
 import { AppSidebar } from '@/components/app-sidebar'
 import { Separator } from '@/components/ui/separator'
@@ -67,11 +61,6 @@ function RootComponent() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3"
             >
-              <Link to="/dashboard/notification">
-                <button className="hover:bg-secondary border  p-2 rounded-md">
-                  <Bell className="h-4 w-4" />
-                </button>
-              </Link>
               <ModeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -98,15 +87,6 @@ function RootComponent() {
                           aria-hidden="true"
                         />
                         <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link to="/dashboard/settings" className="w-full">
-                        <Settings
-                          className="inline mr-2 size-4 opacity-90"
-                          aria-hidden="true"
-                        />
-                        <span>Settings</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
