@@ -16,6 +16,7 @@ import {
 import { query } from '@/hooks/query'
 import { Input } from '@/components/ui/input'
 import { DeleteMenu } from '@/components/menu-item'
+import { imageUrl } from '@/lib/utils'
 
 const schema = z.object({
   name: z
@@ -182,7 +183,7 @@ export function EditDialog({
               </form.AppField>
               {(!documents || documents.length == 0) && (
                 <img
-                  src={`${import.meta.env.VITE_ASSETS_HOST}/${data?.picture}`}
+                  src={imageUrl(data?.picture || '')}
                   className="object-contain w-full h-44 rounded-xl block mt-5"
                 />
               )}
